@@ -8,7 +8,13 @@
 import SwiftUI
 
 struct ContentView: View {
+     //player1 is in charge of the scoreboard
     
+    @State var enterPlayer1 = ""
+    @State var enterPlayer2 = ""
+    @State var enterPlayer3 = ""
+    @State var enterPlayer4 = ""
+    @State var playerNamesShuffleList: [String] = []
     @State var player1 = Player(name: "player1", score: 25000, wind: "東", winner: false, loser: false, tenpai: false, riichi: false)
     @State var player2 = Player(name: "player2", score: 25000, wind: "南", winner: false, loser: false, tenpai: false, riichi: false)
     @State var player3 = Player(name: "player3", score: 25000, wind: "西", winner: false, loser: false, tenpai: false, riichi: false)
@@ -33,6 +39,8 @@ struct ContentView: View {
     @State var ron = false      //for displaying the ron picker
     @State var tsumo = false    //for displaying the tsumo picker
     @State var exhaust = false  //for displaying the exhaust picker
+    @State var enterNames = true
+    @State var showNames = false    //for displaying the show names screen
 
     @State var tenpaiCounter = 0
     
@@ -358,8 +366,99 @@ struct ContentView: View {
                 }.ignoresSafeArea()
             }
             
+            if enterNames {
+                ZStack {
+                    Rectangle()
+                        .foregroundColor(.black)
+                        .opacity(0.6)
+                    VStack {
+                        Text("Enter player names")
+                            .foregroundColor(.white)
+                        TextField(
+                            "Enter player name",
+                            text: $enterPlayer1)
+                        .textFieldStyle(.roundedBorder)
+                        TextField(
+                            "Enter player name",
+                            text: $enterPlayer2)
+                        .textFieldStyle(.roundedBorder)
+                        TextField(
+                            "Enter player name",
+                            text: $enterPlayer3)
+                        .textFieldStyle(.roundedBorder)
+                        TextField(
+                            "Enter player name",
+                            text: $enterPlayer4)
+                        .textFieldStyle(.roundedBorder)
+                    }
+                    .font(.system(size: 30))
+                    .foregroundColor(.black)
+                    .padding(40)
+                    VStack {
+                        Spacer()
+                        Button("submit") {
+                            enterNames = false
+                            showNames = true
+                            decideSeats()
+                        }.font(.system(size: 30))
+                            .padding(.bottom, 250)
+                    }
+                }.ignoresSafeArea()
+            }
+            
+            if showNames {
+                ZStack {
+                    Rectangle()
+                        .foregroundColor(.black)
+                        .opacity(0.6)
+                    VStack {
+                        Text(playerList[2].name)
+                            
+                            .rotationEffect(Angle(degrees: 180))
+                        Spacer()
+                        Text(playerList[0].name)
+                    }
+                    .font(.system(size: 60))
+                    .foregroundColor(.white)
+                    .padding(40)
+                    HStack {
+                        Text(playerList[3].name)
+                            .rotationEffect(Angle(degrees: 90))
+                        Spacer()
+                        Text(playerList[1].name)
+                            .rotationEffect(Angle(degrees: -90))
+                            .onTapGesture {
+                            playerList[1].tenpai.toggle()
+                        }
+                    }
+                    .font(.system(size: 60))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 20)
+                    VStack {
+                        Spacer()
+                        Spacer()
+                        Button("start") {
+                            showNames = false
+                        }.font(.system(size: 30))
+                        Spacer()
+                    }
+                }.ignoresSafeArea()
+            }
+            
         }.onAppear(perform: {restart()})
     }
+    
+    func decideSeats() {
+        playerNamesShuffleList.append(enterPlayer1)
+        playerNamesShuffleList.append(enterPlayer2)
+        playerNamesShuffleList.append(enterPlayer3)
+        playerNamesShuffleList.append(enterPlayer4)
+        playerNamesShuffleList.shuffle()
+        for i in playerNamesShuffleList.indices {
+            playerList[i].name = playerNamesShuffleList[i]
+        }
+    }
+    
         func scoreTsumo() {
             
             switch han {
