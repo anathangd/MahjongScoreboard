@@ -88,7 +88,7 @@ struct ContentView: View {
                     displayResults()
                 } label: {
                     Image(systemName: "line.3.horizontal").foregroundColor(.black)
-                        .padding()
+                        .padding(5)
                 }
 
                 
@@ -506,6 +506,11 @@ struct ContentView: View {
         playerNamesShuffleList.append(enterPlayer2)
         playerNamesShuffleList.append(enterPlayer3)
         playerNamesShuffleList.append(enterPlayer4)
+        for i in playerNamesShuffleList.indices {
+            if playerNamesShuffleList[i] == "" {
+                playerNamesShuffleList[i] = "player" + String(i + 1)
+            }
+        }
         playerNamesShuffleList.shuffle()
         for i in playerNamesShuffleList.indices {
             playerList[i].name = playerNamesShuffleList[i]
@@ -554,6 +559,7 @@ struct ContentView: View {
             playerList[i].winner = false
             playerList[i].riichi = false
             playerList[i].tenpai = false
+            han = 1
         }
         
         
@@ -590,6 +596,7 @@ struct ContentView: View {
             playerList[i].winner = false
             playerList[i].riichi = false
             playerList[i].tenpai = false
+            han = 1
         }
     }
     
@@ -630,6 +637,12 @@ struct ContentView: View {
     }
     
     func restart() {
+        playerNamesShuffleList.removeAll()
+        enterPlayer1 = ""
+        enterPlayer2 = ""
+        enterPlayer3 = ""
+        enterPlayer4 = ""
+        enterNames = true
         windsList = ["東", "南", "西", "北"]
         player1.wind = windsList[0]
         player2.wind = windsList[1]
