@@ -14,6 +14,12 @@ struct ContentView: View {
     @State var enterPlayer2 = ""
     @State var enterPlayer3 = ""
     @State var enterPlayer4 = ""
+    
+    @State var firstPlace = ""
+    @State var secondPlace = ""
+    @State var thirdPlace = ""
+    @State var fourthPlace = ""
+    
     @State var playerNamesShuffleList: [String] = []
     @State var player1 = Player(name: "player1", score: 25000, wind: "東", winner: false, loser: false, tenpai: false, riichi: false)
     @State var player2 = Player(name: "player2", score: 25000, wind: "南", winner: false, loser: false, tenpai: false, riichi: false)
@@ -39,8 +45,16 @@ struct ContentView: View {
     @State var ron = false      //for displaying the ron picker
     @State var tsumo = false    //for displaying the tsumo picker
     @State var exhaust = false  //for displaying the exhaust picker
-    @State var enterNames = true
+    @State var enterNames = true    //needs to be true!!
     @State var showNames = false    //for displaying the show names screen
+    @State var displayResultsScreen = false //for displaying results screen!
+    
+    @State var newArr: [Player] = [
+        Player(name: "player1", score: 25000, wind: "東", winner: false, loser: false, tenpai: false, riichi: false),
+        Player(name: "player2", score: 25000, wind: "南", winner: false, loser: false, tenpai: false, riichi: false),
+        Player(name: "player3", score: 25000, wind: "西", winner: false, loser: false, tenpai: false, riichi: false),
+        Player(name: "player4", score: 25000, wind: "北", winner: false, loser: false, tenpai: false, riichi: false)
+    ]
 
     @State var tenpaiCounter = 0
     
@@ -68,6 +82,12 @@ struct ContentView: View {
                     exhaust = true
                 } label: {
                     Image(systemName: "x.circle").foregroundColor(.black)
+                        .padding()
+                }
+                Button {
+                    displayResults()
+                } label: {
+                    Image(systemName: "line.3.horizontal").foregroundColor(.black)
                         .padding()
                 }
 
@@ -425,22 +445,55 @@ struct ContentView: View {
                         Text(playerList[3].name)
                             .rotationEffect(Angle(degrees: 90))
                         Spacer()
-                        Text(playerList[1].name)
-                            .rotationEffect(Angle(degrees: -90))
-                            .onTapGesture {
-                            playerList[1].tenpai.toggle()
-                        }
                     }
                     .font(.system(size: 60))
                     .foregroundColor(.white)
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, 10)
+                    HStack {
+                        Spacer()
+                        Text(playerList[1].name)
+                            .rotationEffect(Angle(degrees: -90))
+                    }
+                    .font(.system(size: 60))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 10)
                     VStack {
                         Spacer()
                         Spacer()
                         Button("start") {
                             showNames = false
                         }.font(.system(size: 30))
+                            .padding(.top, 120)
                         Spacer()
+                    }
+                }.ignoresSafeArea()
+            }
+            
+            if displayResultsScreen {
+                ZStack {
+                    Rectangle()
+                        .foregroundColor(.black)
+                        .opacity(0.7)
+                    VStack {
+                        Text(newArr[0].name + ": " + String(newArr[0].score))
+                            .font(.system(size: 50))
+                        Text(newArr[1].name + ": " + String(newArr[1].score))
+                            .font(.system(size: 48))
+                        Text(newArr[2].name + ": " + String(newArr[2].score))
+                            .font(.system(size: 46))
+                        Text(newArr[3].name + ": " + String(newArr[3].score))
+                            .font(.system(size: 44))
+                        
+                    }
+                    .font(.system(size: 30))
+                    .foregroundColor(.white)
+                    .padding(40)
+                    VStack {
+                        Spacer()
+                        Button("done") {
+                            displayResultsScreen = false
+                        }.font(.system(size: 30))
+                            .padding(.bottom, 250)
                     }
                 }.ignoresSafeArea()
             }
@@ -459,151 +512,158 @@ struct ContentView: View {
         }
     }
     
-        func scoreTsumo() {
-            
-            switch han {
-            case 1: winnerPoints = 1000
-            case 2: winnerPoints = 2000
-            case 3: winnerPoints = 4000
-            case 4, 5: winnerPoints = 8000
-            case 6, 7: winnerPoints = 12000
-            case 8, 9, 10: winnerPoints = 16000
-            case 11, 12: winnerPoints = 24000
-            case 13: winnerPoints = 32000
-            default: winnerPoints = 0
-            }
-            
-            tsumo = false
-            
-            if winner == "東" {
-                winnerPoints = winnerPoints + winnerPoints / 2
-                regularMinusPoints = winnerPoints / 3
-            } else {
-                dealerMinusPoints = winnerPoints / 2
-                regularMinusPoints = dealerMinusPoints / 2
-            }
-            
-            for i in playerList.indices {
-                //handle winner
-                if playerList[i].winner {
-                    playerList[i].score += winnerPoints
-                    playerList[i].score += riichiPot
-                    riichiPot = 0
-                } else {
-                    //handle the losers
-                    if playerList[i].wind == "東"{
-                        playerList[i].score -= dealerMinusPoints
-                    } else {
-                        playerList[i].score -= regularMinusPoints
-                    }
-                }
-               
-                playerList[i].winner = false
-                playerList[i].riichi = false
-            }
-            
-            
+    func scoreTsumo() {
+        
+        switch han {
+        case 1: winnerPoints = 1000
+        case 2: winnerPoints = 2000
+        case 3: winnerPoints = 4000
+        case 4, 5: winnerPoints = 8000
+        case 6, 7: winnerPoints = 12000
+        case 8, 9, 10: winnerPoints = 16000
+        case 11, 12: winnerPoints = 24000
+        case 13: winnerPoints = 32000
+        default: winnerPoints = 0
         }
         
-        func scoreRon() {
-            
-            switch han {
-            case 1: winnerPoints = 1000
-            case 2: winnerPoints = 2000
-            case 3: winnerPoints = 4000
-            case 4, 5: winnerPoints = 8000
-            case 6, 7: winnerPoints = 12000
-            case 8, 9, 10: winnerPoints = 16000
-            case 11, 12: winnerPoints = 24000
-            case 13: winnerPoints = 32000
-            default: winnerPoints = 0
-            }
-            
-            ron = false
-            
-            for i in playerList.indices {
-                if playerList[i].winner {
-                    if playerList[i].wind == "東" {
-                        winnerPoints = winnerPoints + winnerPoints / 2
-                    }
-                    playerList[i].score += winnerPoints
-                    playerList[i].score += riichiPot
-                    riichiPot = 0
-                    }
-                if playerList[i].wind == loser {
-                    playerList[i].score -= winnerPoints
-                }
-                playerList[i].winner = false
-                playerList[i].riichi = false
-            }
+        tsumo = false
+        
+        if winner == "東" {
+            winnerPoints = winnerPoints + winnerPoints / 2
+            regularMinusPoints = winnerPoints / 3
+        } else {
+            dealerMinusPoints = winnerPoints / 2
+            regularMinusPoints = dealerMinusPoints / 2
         }
         
-        func scoreExhaust() {
-            
-            for i in playerList.indices {
-                if playerList[i].tenpai {
-                    tenpaiCounter += 1
-                }
-                playerList[i].riichi = false    //pot stays the same
-            }
-            if (tenpaiCounter == 0 || tenpaiCounter == 4) {
-                tenpaiCounter = 1   //just paranoid about dividing by 0
-                winnerPoints = 0
+        for i in playerList.indices {
+            //handle winner
+            if playerList[i].winner {
+                playerList[i].score += winnerPoints
+                playerList[i].score += riichiPot
+                riichiPot = 0
             } else {
-                winnerPoints = 3000 / tenpaiCounter
-                if tenpaiCounter == 1 {
-                    regularMinusPoints = winnerPoints / 3   //each player pays 1000
-                } else if tenpaiCounter == 2 {
-                    regularMinusPoints = winnerPoints   //two players each pay 1500
-                } else {
-                    regularMinusPoints = winnerPoints * 3   //one player pays 3000
-                }   //winner and minus points decided
-                
-            }
-            for i in playerList.indices {
-                if playerList[i].tenpai {
-                    playerList[i].score += winnerPoints
-                    playerList[i].tenpai = false
+                //handle the losers
+                if playerList[i].wind == "東"{
+                    playerList[i].score -= dealerMinusPoints
                 } else {
                     playerList[i].score -= regularMinusPoints
-                }   //winner and minus scored
+                }
             }
-            //reset variables
-            tenpaiCounter = 0
-            winnerPoints = 0
-            regularMinusPoints = 0
+            
+            playerList[i].winner = false
+            playerList[i].riichi = false
+            playerList[i].tenpai = false
         }
         
-        func restart() {
-            windsList = ["東", "南", "西", "北"]
-            player1.wind = windsList[0]
-            player2.wind = windsList[1]
-            player3.wind = windsList[2]
-            player4.wind = windsList[3]
-            player1.score = 25000
-            player2.score = 25000
-            player3.score = 25000
-            player4.score = 25000
-            playerList = [player1, player2, player3, player4]
-            tenpaiCounter = 0
-            winnerPoints = 0
-            regularMinusPoints = 0
-            riichiPot = 0
-            han = 1
-            winner = "東"
-            loser = "南"
+        
+    }
+    
+    func scoreRon() {
+        
+        switch han {
+        case 1: winnerPoints = 1000
+        case 2: winnerPoints = 2000
+        case 3: winnerPoints = 4000
+        case 4, 5: winnerPoints = 8000
+        case 6, 7: winnerPoints = 12000
+        case 8, 9, 10: winnerPoints = 16000
+        case 11, 12: winnerPoints = 24000
+        case 13: winnerPoints = 32000
+        default: winnerPoints = 0
         }
         
-        func rotateWinds() {
-            let popped = windsList.popLast()
-            windsList.insert(popped ?? "East", at: 0)
-            
-            playerList[0].wind = windsList[0]
-            playerList[1].wind = windsList[1]
-            playerList[2].wind = windsList[2]
-            playerList[3].wind = windsList[3]
+        ron = false
+        
+        for i in playerList.indices {
+            if playerList[i].winner {
+                if playerList[i].wind == "東" {
+                    winnerPoints = winnerPoints + winnerPoints / 2
+                }
+                playerList[i].score += winnerPoints
+                playerList[i].score += riichiPot
+                riichiPot = 0
+            }
+            if playerList[i].wind == loser {
+                playerList[i].score -= winnerPoints
+            }
+            playerList[i].winner = false
+            playerList[i].riichi = false
+            playerList[i].tenpai = false
+        }
+    }
+    
+    func scoreExhaust() {
+        
+        for i in playerList.indices {
+            if playerList[i].tenpai {
+                tenpaiCounter += 1
+            }
+            playerList[i].riichi = false    //pot stays the same
+        }
+        if (tenpaiCounter == 0 || tenpaiCounter == 4) {
+            tenpaiCounter = 1   //just paranoid about dividing by 0
+            winnerPoints = 0
+        } else {
+            winnerPoints = 3000 / tenpaiCounter
+            if tenpaiCounter == 1 {
+                regularMinusPoints = winnerPoints / 3   //each player pays 1000
+            } else if tenpaiCounter == 2 {
+                regularMinusPoints = winnerPoints   //two players each pay 1500
+            } else {
+                regularMinusPoints = winnerPoints * 3   //one player pays 3000
+            }   //winner and minus points decided
             
         }
+        for i in playerList.indices {
+            if playerList[i].tenpai {
+                playerList[i].score += winnerPoints
+                playerList[i].tenpai = false
+            } else {
+                playerList[i].score -= regularMinusPoints
+            }   //winner and minus scored
+        }
+        //reset variables
+        tenpaiCounter = 0
+        winnerPoints = 0
+        regularMinusPoints = 0
+    }
+    
+    func restart() {
+        windsList = ["東", "南", "西", "北"]
+        player1.wind = windsList[0]
+        player2.wind = windsList[1]
+        player3.wind = windsList[2]
+        player4.wind = windsList[3]
+        player1.score = 25000
+        player2.score = 25000
+        player3.score = 25000
+        player4.score = 25000
+        playerList = [player1, player2, player3, player4]
+        tenpaiCounter = 0
+        winnerPoints = 0
+        regularMinusPoints = 0
+        riichiPot = 0
+        han = 1
+        winner = "東"
+        loser = "南"
+    }
+    
+    func rotateWinds() {
+        let popped = windsList.popLast()
+        windsList.insert(popped ?? "East", at: 0)
+        
+        playerList[0].wind = windsList[0]
+        playerList[1].wind = windsList[1]
+        playerList[2].wind = windsList[2]
+        playerList[3].wind = windsList[3]
+        
+    }
+    
+    func displayResults() {
+        newArr = playerList.sorted { $0.score > $1.score }
+        displayResultsScreen = true
+    }
         
     }
     struct ContentView_Previews: PreviewProvider {
