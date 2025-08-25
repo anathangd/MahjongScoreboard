@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		440522962E5C803200305437 /* ScoringDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440522952E5C803200305437 /* ScoringDisplay.swift */; };
 		441D8EC02AAB728E00F5FE53 /* Mahjong_ScoreboardApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441D8EBF2AAB728E00F5FE53 /* Mahjong_ScoreboardApp.swift */; };
 		441D8EC22AAB728E00F5FE53 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441D8EC12AAB728E00F5FE53 /* ContentView.swift */; };
 		441D8EC42AAB728E00F5FE53 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 441D8EC32AAB728E00F5FE53 /* Assets.xcassets */; };
@@ -14,9 +15,11 @@
 		441D8ED22AAC8DFF00F5FE53 /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441D8ED12AAC8DFF00F5FE53 /* Player.swift */; };
 		441D8ED42AACD0CC00F5FE53 /* TenpaiButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441D8ED32AACD0CC00F5FE53 /* TenpaiButton.swift */; };
 		441D8ED62AACE06500F5FE53 /* RiichiButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441D8ED52AACE06500F5FE53 /* RiichiButton.swift */; };
+		44E566522D8A97DE001A2A5E /* act_rich.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 44E566512D8A97DE001A2A5E /* act_rich.mp3 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		440522952E5C803200305437 /* ScoringDisplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoringDisplay.swift; sourceTree = "<group>"; };
 		441D8EBC2AAB728E00F5FE53 /* Mahjong Scoreboard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Mahjong Scoreboard.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		441D8EBF2AAB728E00F5FE53 /* Mahjong_ScoreboardApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mahjong_ScoreboardApp.swift; sourceTree = "<group>"; };
 		441D8EC12AAB728E00F5FE53 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -25,6 +28,7 @@
 		441D8ED12AAC8DFF00F5FE53 /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
 		441D8ED32AACD0CC00F5FE53 /* TenpaiButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TenpaiButton.swift; sourceTree = "<group>"; };
 		441D8ED52AACE06500F5FE53 /* RiichiButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiichiButton.swift; sourceTree = "<group>"; };
+		44E566512D8A97DE001A2A5E /* act_rich.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = act_rich.mp3; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -59,6 +63,7 @@
 			children = (
 				441D8EBF2AAB728E00F5FE53 /* Mahjong_ScoreboardApp.swift */,
 				441D8EC12AAB728E00F5FE53 /* ContentView.swift */,
+				440522952E5C803200305437 /* ScoringDisplay.swift */,
 				441D8ED52AACE06500F5FE53 /* RiichiButton.swift */,
 				441D8ED32AACD0CC00F5FE53 /* TenpaiButton.swift */,
 				441D8ED12AAC8DFF00F5FE53 /* Player.swift */,
@@ -71,6 +76,7 @@
 		441D8EC52AAB728E00F5FE53 /* Preview Content */ = {
 			isa = PBXGroup;
 			children = (
+				44E566512D8A97DE001A2A5E /* act_rich.mp3 */,
 				441D8EC62AAB728E00F5FE53 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
@@ -134,6 +140,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				44E566522D8A97DE001A2A5E /* act_rich.mp3 in Resources */,
 				441D8EC72AAB728E00F5FE53 /* Preview Assets.xcassets in Resources */,
 				441D8EC42AAB728E00F5FE53 /* Assets.xcassets in Resources */,
 			);
@@ -150,6 +157,7 @@
 				441D8ED62AACE06500F5FE53 /* RiichiButton.swift in Sources */,
 				441D8EC22AAB728E00F5FE53 /* ContentView.swift in Sources */,
 				441D8ED42AACD0CC00F5FE53 /* TenpaiButton.swift in Sources */,
+				440522962E5C803200305437 /* ScoringDisplay.swift in Sources */,
 				441D8EC02AAB728E00F5FE53 /* Mahjong_ScoreboardApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

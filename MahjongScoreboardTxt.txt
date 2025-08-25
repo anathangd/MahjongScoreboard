@@ -10,7 +10,7 @@ import AVFoundation
 
 struct ContentView: View {
      //player1 is in charge of the scoreboard
-    @StateObject var audioManager = AudioManager()
+    
     @State var timerDown = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     @State var timerUp = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     @State var timerLeft = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -66,7 +66,6 @@ struct ContentView: View {
     @State var tenpaiCounter = 0
     @State var showDice = false
     @State var roundWind = "東"
-    @State var extraRounds = false
     @State var downScoreChange = false
     @State var upScoreChange = false
     @State var leftScoreChange = false
@@ -94,25 +93,17 @@ struct ContentView: View {
     @State var decimalSeconds = 10
     @State var maxTime = 24.0
     @State var showYaku = false
-    var bottomPaddingForButtons = CGFloat(203)
+    var bottomPaddingForButtons = CGFloat(210)
     @State var threePlayerMode = false
     @State var editNames = false
     @State var dieRoll1 = "die.face.1"
     @State var dieRoll2 = "die.face.1"
     @State var ronList = [""]
-    @State var calculateFu = true
-    @State var fu = 20    // default starting fu
-    @State var quick3 = false
-    @State var showFu = false
-    @State var addingFu = 20
-    @State var riichiPotIndicator = 0
-    @State var honbaCount = 0
-    @State var displayScoring = false
-    @State var scoringScreen = true
+    //@State var totalWinningPoints = 0
     
     var body: some View {
         ZStack {
-            //show yaku button
+            
             VStack {
                 Spacer()
                 HStack {
@@ -125,21 +116,14 @@ struct ContentView: View {
                     .padding(.init(top: 0, leading: 0, bottom: -10, trailing: 50))
                     .disabled(timerOn ? true : false)
                 }
-            }
+            }   //show yaku button
             
-            //show fu button
-            ShowFuButton(showFu: $showFu, timerOn: $timerOn, ron: $ron, tsumo: $tsumo, calculateFu: $calculateFu, han: $han)
-            
-            //menu buttons
             VStack {
                 Button {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
-                        showDice = false
-                    }
                     rollDice()
                 } label: {
                     Image(systemName: "dice")
-                        // .padding(.bottom, -8)
+                        .padding(.bottom, -8)
                         .foregroundStyle(.black)
                 }
                 .disabled(timerOn ? true : false)
@@ -152,27 +136,19 @@ struct ContentView: View {
                         
                     }
                 } label: {
-                    Image("radioactive")
-                        .resizable()
-                        .frame(width: 45, height: 45)
-                        // .renderingMode(.template)
-                        .padding(.init(top: 20, leading: 5, bottom: 25, trailing: 5))
-                        // .foregroundStyle(.red)
+                    Image("restarticon").padding().foregroundColor(.blue)
                 }
-                .disabled(timerOn)
+                .disabled(timerOn ? true : false)
                 Button {
                     timerOn = true
                 } label: {
                     Image(systemName: "hourglass").foregroundColor(.black)
-                        .padding(.init(top: -5, leading: 5, bottom: 15, trailing: 5))
+                        .padding(.init(top: -15, leading: 5, bottom: 15, trailing: 5))
                 }
                 Button {
                     rotateWinds()
                 } label: {
-                    Image(systemName: "rotate.left")
-                        .padding(.bottom, 5)
-                        .padding(.top, -5)
-                        .foregroundColor(.black)
+                    Image(systemName: "rotate.left").padding(.top, -20).foregroundColor(.black)
                 }
                 Button {
                     exhaust = true
@@ -189,10 +165,9 @@ struct ContentView: View {
                 }.disabled(timerOn ? true : false)
 
                 
-            }
+            }   //menu buttons
             .font(.system(size: 50))
             
-            //top and bottom players
             VStack {
                 //top player
                 Text(String(playerList[2].score))
@@ -241,7 +216,6 @@ struct ContentView: View {
                             playerList[2].score += 1000
                             riichiPot -= 1000
                         } else {
-                            audioManager.playSound()
                             playerList[2].riichi = true
                             playerList[2].tenpai = true
                             playerList[2].score -= 1000
@@ -260,7 +234,6 @@ struct ContentView: View {
                             playerList[0].score += 1000
                             riichiPot -= 1000
                         } else {
-                            audioManager.playSound()
                             playerList[0].riichi = true
                             playerList[0].tenpai = true
                             playerList[0].score -= 1000
@@ -301,10 +274,9 @@ struct ContentView: View {
                     .frame(width: 200, height: 70)
                     //.background(.yellow)
                     .monospacedDigit()
-            }
+            }   //top and bottom players
             .font(.system(size: 50))
             
-            //left and right players
             LazyHStack {
                 LazyHStack {
                     Menu {
@@ -384,10 +356,9 @@ struct ContentView: View {
                 .padding(.init(top: 30, leading: 0, bottom: -70, trailing: 0))
                 //.padding(.bottom, -80)
                 .rotationEffect(Angle(degrees: -90))
-            }
+            }   //left and right players
             .font(.system(size: 50))
             
-            //left and right riichi
             HStack {
                 RiichiButton(player: playerList[3], riichi: playerList[3].riichi)
                     .onTapGesture {
@@ -397,7 +368,6 @@ struct ContentView: View {
                             playerList[3].score += 1000
                             riichiPot -= 1000
                         } else {
-                            audioManager.playSound()
                             playerList[3].riichi = true
                             playerList[3].tenpai = true
                             playerList[3].score -= 1000
@@ -416,52 +386,32 @@ struct ContentView: View {
                             playerList[1].score += 1000
                             riichiPot -= 1000
                         } else {
-                            audioManager.playSound()
                             playerList[1].riichi = true
                             playerList[1].tenpai = true
                             playerList[1].score -= 1000
                             riichiPot += 1000
                         }
                     }.rotationEffect(Angle(degrees: 90))
-            }
+            }   //left and right riichi
             
-            //round wind indicator
             VStack {
                 Spacer()
                 HStack {
                     Button {
                         changeRoundWind()
                     } label: {
-                        if extraRounds {
-                            Text(roundWind)
-                                .frame(width: 100, height: 100)
-                                .padding(.init(top: -5, leading: 25, bottom: -30, trailing: -5))
-                                .font(.system(size: 100))
-                                .foregroundStyle(roundWind == "西" ? .purple : .yellow)
-                                .background(roundWind == "西" ? .yellow : .mint)
-                                .onLongPressGesture {
-                                    roundWind = "東"
-                                    extraRounds.toggle()
-                                }
-                        } else {
-                            Text(roundWind)
-                                .frame(width: 100, height: 100)
-                                .padding(.init(top: -5, leading: 25, bottom: -30, trailing: -5))
-                                .font(.system(size: 100))
-                                .foregroundStyle(roundWind == "東" ? .gray : .yellow)
-                                .background(roundWind == "東" ? .red : .green)
-                                .onLongPressGesture {
-                                    roundWind = "西"
-                                    extraRounds.toggle()
-                                }
-                        }
+                        Text(roundWind)
+                            .frame(width: 100, height: 100)
+                            .padding(.init(top: -5, leading: 25, bottom: -30, trailing: -5))
+                            .font(.system(size: 100))
+                            .foregroundStyle(roundWind == "東" ? .gray : .yellow)
+                            .background(roundWind == "東" ? .red : .green)
                     }
                     .buttonStyle(.plain)
                     Spacer()
                 }
-            }
+            }   //round wind indicator
             
-            //score change
             ZStack {
                 VStack {
                     if upScoreChange {
@@ -769,75 +719,7 @@ struct ContentView: View {
                         }
                     }
                 }   //right player
-            }
-            
-            // riichi pot and honba indicator
-            VStack {
-                HStack {
-                    // riichi pot
-                    VStack {
-                        ZStack {
-                            Rectangle()
-                                .frame(width: 10, height: 30)
-                                .border(.black, width: 1)
-                                .foregroundColor(.white)
-                            Circle()
-                                .frame(height: 5)
-                                .foregroundColor(.red)
-                        }
-                        Text(String(riichiPotIndicator))
-                            .font(.caption)
-                    }
-                    // honba indicator
-                    VStack {
-                        ZStack {
-                            Rectangle()
-                                .frame(width: 10, height: 30)
-                                .border(.black, width: 1)
-                                .foregroundColor(.white)
-                            VStack(spacing: 2) {
-                                HStack(spacing: 1) {
-                                    Circle()
-                                        .frame(height: 2)
-                                        .foregroundColor(.black)
-                                    Circle()
-                                        .frame(height: 2)
-                                        .foregroundColor(.black)
-                                }
-                                HStack(spacing: 1) {
-                                    Circle()
-                                        .frame(height: 2)
-                                        .foregroundColor(.black)
-                                    Circle()
-                                        .frame(height: 2)
-                                        .foregroundColor(.black)
-                                }
-                                HStack(spacing: 1) {
-                                    Circle()
-                                        .frame(height: 2)
-                                        .foregroundColor(.black)
-                                    Circle()
-                                        .frame(height: 2)
-                                        .foregroundColor(.black)
-                                }
-                                HStack(spacing: 1) {
-                                    Circle()
-                                        .frame(height: 2)
-                                        .foregroundColor(.black)
-                                    Circle()
-                                        .frame(height: 2)
-                                        .foregroundColor(.black)
-                                }
-                            }
-                        }
-                        Text(String(honbaCount))
-                            .font(.caption)
-                    }
-                    Spacer()
-                }
-                .padding(.init(top: 0, leading: 50, bottom: -10, trailing: 0))
-                Spacer()
-            }
+            }   //score change
             
             if timerOn {
                 ZStack {
@@ -872,43 +754,27 @@ struct ContentView: View {
                             timerTime = 0
                             playerTimer.upstream.connect().cancel()
                             AudioServicesPlaySystemSound(1031)
+//                            hiddenTimerTime = maxTime
+//                            timerTime = maxTime
+//                            decimalSeconds = 10
                         }
                     })
-                    if extraRounds {
-                        Circle()
-                            .stroke(AngularGradient(gradient: Gradient(colors: roundWind == "西" ? [.yellow, .purple] : [.mint, .yellow]), center: .center), style: StrokeStyle(
-                                lineWidth: 15,
-                                lineCap: .round
-                            )).opacity(0.5)
-                            .rotationEffect(.degrees(-90))
-                            .frame(width: 120, height: 120)
-                        Circle()
-                            .trim(from: 0, to: (hiddenTimerTime + 1)/(maxTime + 1))
-                            .stroke(AngularGradient(gradient: Gradient(colors: roundWind == "西" ? [.yellow, .purple] : [.mint, .yellow]), center: .center), style: StrokeStyle(
-                                lineWidth: 15,
-                                lineCap: .round
-                            ))
-                            .rotationEffect(.degrees(-90))
-                            .animation(.easeOut, value: hiddenTimerTime/maxTime)
-                            .frame(width: 120, height: 120)
-                    } else {
-                        Circle()
-                            .stroke(AngularGradient(gradient: Gradient(colors: roundWind == "東" ? [.red, .gray] : [.green, .yellow]), center: .center), style: StrokeStyle(
-                                lineWidth: 15,
-                                lineCap: .round
-                            )).opacity(0.5)
-                            .rotationEffect(.degrees(-90))
-                            .frame(width: 120, height: 120)
-                        Circle()
-                            .trim(from: 0, to: (hiddenTimerTime + 1)/(maxTime + 1))
-                            .stroke(AngularGradient(gradient: Gradient(colors: roundWind == "東" ? [.red, .gray] : [.green, .yellow]), center: .center), style: StrokeStyle(
-                                lineWidth: 15,
-                                lineCap: .round
-                            ))
-                            .rotationEffect(.degrees(-90))
-                            .animation(.easeOut, value: hiddenTimerTime/maxTime)
-                            .frame(width: 120, height: 120)
-                    }
+                    Circle()
+                        .stroke(AngularGradient(gradient: Gradient(colors: roundWind == "東" ? [.red, .gray] : [.green, .yellow]), center: .center), style: StrokeStyle(
+                            lineWidth: 15,
+                            lineCap: .round
+                        )).opacity(0.5)
+                        .rotationEffect(.degrees(-90))
+                        .frame(width: 120, height: 120)
+                    Circle()
+                        .trim(from: 0, to: (hiddenTimerTime + 1)/(maxTime + 1))
+                        .stroke(AngularGradient(gradient: Gradient(colors: roundWind == "東" ? [.red, .gray] : [.green, .yellow]), center: .center), style: StrokeStyle(
+                            lineWidth: 15,
+                            lineCap: .round
+                        ))
+                        .rotationEffect(.degrees(-90))
+                        .animation(.easeOut, value: hiddenTimerTime/maxTime)
+                        .frame(width: 120, height: 120)
                 }
                 .frame(width: 150, height: 150)
                 .onTapGesture {
@@ -928,15 +794,21 @@ struct ContentView: View {
                     Rectangle()
                         .foregroundColor(.black)
                         .opacity(0.7)
-                        .onTapGesture {
-                            showDice = false
-                        }
                     HStack {
                         Image(systemName: dieRoll1)
                         Image(systemName: dieRoll2)
                     }
                     .foregroundStyle(.white)
                     .font(.system(size: 100))
+                    VStack {
+                        Spacer()
+                        Button("done") {
+                            showDice = false
+                        }
+                        .font(.system(size: 30))
+                        .padding(.bottom, bottomPaddingForButtons)
+                    }
+                    
                 }
                 .ignoresSafeArea()
             }
@@ -951,8 +823,6 @@ struct ContentView: View {
                             winner = ""
                             loser = ""
                             han = 1
-                            addingFu = 20
-                            fu = 20
                             for i in playerList.indices {
                                 playerList[i].winner = false
                             }
@@ -983,22 +853,6 @@ struct ContentView: View {
                                 }
                                 .padding(.top, -20)
                                 .pickerStyle(.wheel)
-                            }
-                            if calculateFu {
-                                VStack {
-                                    Text("Fu:")
-                                    Picker("Fu", selection: $fu) {
-                                        ForEach([20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 110], id: \.self) { value in
-                                            Text("\(value)")
-                                                .foregroundColor(han >= 5 ? .gray : .primary)
-                                                .tag(value)
-                                        }
-                                    }
-                                    .disabled(han >= 5)
-                                    .padding(.top, -20)
-                                    .pickerStyle(.wheel)
-                                }
-                                .foregroundStyle(han > 4 ? .gray : .black)
                             }
                         }
                     }
@@ -1034,8 +888,6 @@ struct ContentView: View {
                             winner = ""
                             loser = ""
                             han = 1
-                            addingFu = 20
-                            fu = 20
                             for i in playerList.indices {
                                 playerList[i].winner = false
                                 playerList[i].loser = false
@@ -1047,6 +899,7 @@ struct ContentView: View {
                             .frame(width: 420, height: 250)
                             .cornerRadius(15)
                         HStack {
+                            
                             VStack {
                                 Text("Han:")
                                 Picker("", selection: $han) {
@@ -1057,22 +910,7 @@ struct ContentView: View {
                                 .padding(.top, -20)
                                 .pickerStyle(.wheel)
                             }
-                            if calculateFu {
-                                VStack {
-                                    Text("Fu:")
-                                    Picker("Fu", selection: $fu) {
-                                        ForEach([20, 30, 40, 50, 60, 70, 80, 90, 100, 110], id: \.self) { value in
-                                            Text("\(value)")
-                                                .foregroundColor(han >= 5 ? .gray : .primary)
-                                                .tag(value)
-                                        }
-                                    }
-                                    .disabled(han >= 5)
-                                    .padding(.top, -20)
-                                    .pickerStyle(.wheel)
-                                }
-                                .foregroundStyle(han > 4 ? .gray : .black)
-                            }
+                            
                         }
                     }
                     VStack {
@@ -1097,29 +935,11 @@ struct ContentView: View {
                 .ignoresSafeArea()
             }
             
-            // overlaid fu button and display scoring
-            if ron || tsumo {
-                ShowFuButton(showFu: $showFu, timerOn: $timerOn, ron: $ron, tsumo: $tsumo, calculateFu: $calculateFu, han: $han)
-                Button("display scoring") {
-                    displayScoring.toggle()
-                }
-                .foregroundStyle(.white)
-                .frame(width: 150, height: 40)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(displayScoring ? Color.blue : Color.gray)
-                )
-                .offset(y: 200)
-            }
-            
             if exhaust {
                 ZStack {
                     Rectangle()
                         .foregroundColor(.black)
                         .opacity(0.6)
-                        .onTapGesture {
-                            exhaust = false
-                        }
                     VStack {
                         TenpaiButton(player: playerList[2], tenpai: playerList[2].tenpai)
                             .rotationEffect(Angle(degrees: 180))
@@ -1173,20 +993,9 @@ struct ContentView: View {
                         .foregroundColor(.black)
                         .opacity(0.6)
                     VStack {
-                        Button("quick 3") {
-                            if (!editNames) {
-                                threePlayerMode = true
-                                quick3 = true
-                                decideSeats()
-                            }
-                            enterNames = false
-                            // showNames = true
-                        }
-                        .font(.system(size: 30))
-                        .padding(.top, 210)
-                        Spacer()
-                    }
-                    VStack {
+                        Text("Enter player names")
+                            .foregroundColor(.white)
+                            .padding(.top, -40)
                         TextField(
                             "Enter player name",
                             text: $enterPlayer1)
@@ -1206,121 +1015,29 @@ struct ContentView: View {
                         .opacity(threePlayerMode ? 0: 1)
                     }
                     .font(.system(size: 30))
-                    .padding(.horizontal, 40)
+                    .foregroundColor(.black)
+                    .padding([.horizontal, .bottom], 40)
                     VStack {
                         Spacer()
                         Button("submit") {
-                            showNames = true
-                            if (!editNames) {
+                            if (editNames) {
+                                editNames = false
+                            } else {
                                 decideSeats()
                             }
                             enterNames = false
-                        }
-                        .font(.system(size: 30))
-                        .padding(.bottom, bottomPaddingForButtons)
+                            showNames = true
+                        }.font(.system(size: 30))
+                            .padding(.bottom, bottomPaddingForButtons)
                     }
                 }.ignoresSafeArea()
-            }
-            
-            if scoringScreen {
-                ScoringDisplay()
             }
             
             if showNames {
                 ZStack {
                     Rectangle()
                         .foregroundColor(.black)
-                        .opacity(0.8)
-                        .onTapGesture {
-                            showNames = false
-                        }
-                    // up and left
-                    if !threePlayerMode {
-                        Button {
-                            let temp = playerList[3].name
-                            playerList[3].name = playerList[2].name
-                            playerList[2].name = temp
-                        } label: {
-                            Image(systemName: "arrow.up.and.down")
-                                .font(.system(size: 50))
-                        }
-                        .padding(10)
-                        .contentShape(Rectangle())
-                        .rotationEffect(.degrees(30))
-                        .offset(x:-90, y: -240)
-                    }
-                    
-                    // up and right
-                    Button {
-                        let temp = playerList[1].name
-                        playerList[1].name = playerList[2].name
-                        playerList[2].name = temp
-                    } label: {
-                        Image(systemName: "arrow.up.and.down")
-                            .font(.system(size: 50))
-                    }
-                    .padding(10)
-                    .contentShape(Rectangle())
-                    .rotationEffect(.degrees(-30))
-                    .offset(x:90, y: -240)
-                    
-                    // down and left
-                    if !threePlayerMode {
-                        Button {
-                            let temp = playerList[3].name
-                            playerList[3].name = playerList[0].name
-                            playerList[0].name = temp
-                        } label: {
-                            Image(systemName: "arrow.up.and.down")
-                                .font(.system(size: 50))
-                        }
-                        .padding(10)
-                        .contentShape(Rectangle())
-                        .rotationEffect(.degrees(-30))
-                        .offset(x:-90, y: 240)
-                    }
-                    
-                    // down and right
-                    Button {
-                        let temp = playerList[1].name
-                        playerList[1].name = playerList[0].name
-                        playerList[0].name = temp
-                    } label: {
-                        Image(systemName: "arrow.up.and.down")
-                            .font(.system(size: 50))
-                    }
-                    .padding(10)
-                    .contentShape(Rectangle())
-                    .rotationEffect(.degrees(30))
-                    .offset(x:90, y: 240)
-                    
-                    VStack {
-                        // up and down
-                        Button {
-                            let temp = playerList[0].name
-                            playerList[0].name = playerList[2].name
-                            playerList[2].name = temp
-                        } label: {
-                            Image(systemName: "arrow.up.and.down")
-                                .font(.system(size: 50))
-                        }
-                        .padding(10)
-                        .contentShape(Rectangle())
-                        
-                        // left and right
-                        if !threePlayerMode {
-                            Button {
-                                let temp = playerList[1].name
-                                playerList[1].name = playerList[3].name
-                                playerList[3].name = temp
-                            } label: {
-                                Image(systemName: "arrow.left.and.right")
-                                    .font(.system(size: 50))
-                            }
-                            .padding(10)
-                            .contentShape(Rectangle())
-                        }
-                    }
+                        .opacity(0.6)
                     VStack {
                         Text(playerList[2].name)
                             .frame(width: 400, height: 30)
@@ -1335,6 +1052,11 @@ struct ContentView: View {
                         Text(playerList[0].name)
                             .frame(width: 400, height: 30)
                             .padding(.init(top: 0, leading: 0, bottom: 50, trailing: 0))
+                            .onLongPressGesture {
+                                editNames = true
+                                showNames = false
+                                enterNames = true
+                            }
                     }
                     .font(.system(size: 60))
                     .foregroundColor(.white)
@@ -1369,6 +1091,13 @@ struct ContentView: View {
                     .font(.system(size: 60))
                     .foregroundColor(.white)
                     .padding(.horizontal, 10)
+                    VStack {
+                        Spacer()
+                        Button("start") {
+                            showNames = false
+                        }.font(.system(size: 30))
+                            .padding(.bottom, bottomPaddingForButtons)
+                    }
                 }
                 .ignoresSafeArea()
             }
@@ -1378,9 +1107,6 @@ struct ContentView: View {
                     Rectangle()
                         .foregroundColor(.black)
                         .opacity(0.7)
-                        .onTapGesture {
-                            displayResultsScreen = false
-                        }
                     VStack {
                         Text(newArr[0].name + ": " + String(newArr[0].score))
                             .font(.system(size: 50))
@@ -1396,6 +1122,13 @@ struct ContentView: View {
                     .font(.system(size: 30))
                     .foregroundColor(.white)
                     .padding(40)
+                    VStack {
+                        Spacer()
+                        Button("done") {
+                            displayResultsScreen = false
+                        }.font(.system(size: 30))
+                            .padding(.bottom, bottomPaddingForButtons)
+                    }
                 }.ignoresSafeArea()
             }
             
@@ -1404,7 +1137,7 @@ struct ContentView: View {
                     .ignoresSafeArea()
                     .foregroundStyle(.white)
                 VStack {
-                    ScrollView(showsIndicators: false) {
+                    ScrollView {
                         VStack(alignment: .leading) {
                             Text("1 Han (Closed)\n")
                                 .font(.title2)
@@ -1508,72 +1241,6 @@ struct ContentView: View {
                 }
             }
             
-            if showFu {
-                Rectangle()
-                    .ignoresSafeArea()
-                    .foregroundStyle(.white)
-                VStack {
-                    ScrollView(showsIndicators: false) {
-                        VStack(alignment: .leading) {
-                            Text("Fu (符)")
-                                .font(.title2)
-                            Text("Every winning hand starts with 20 fu")
-                                .padding(.top)
-                            Text("Closed Ron: +10")
-                                .padding(.top)
-                            Text("Tsumo: +2")
-                                .padding(.top)
-                            Text("Melds:")
-                                .padding(.top)
-                            BulletPoint(text: "Open triplet: +2 fu (+4 fu if terminals/honors)")
-                            BulletPoint(text: "Closed triplet: +4 fu (+8 fu if terminals/honors)")
-                            BulletPoint(text: "Open kan: +8 fu (+16 fu if terminals/honors)")
-                            BulletPoint(text: "Closed kan: +16 fu (+32 fu if terminals/honors)")
-                            Text("Waits:")
-                                .padding(.top)
-                            BulletPoint(text: "Open wait (両面): no extra fu")
-                            BulletPoint(text: "Middle closed wait (嵌張): +2 fu")
-                            BulletPoint(text: "Edge wait (辺張): +2 fu")
-                            BulletPoint(text: "Pair wait (単騎): +2 fu")
-                            Text("If your pair is a dragon, round wind, or seat wind: +2 fu")
-                                .padding(.top)
-                            Text("Seven pairs (七対子): +25 fu and that's all")
-                                .padding(.top)
-                            Text("Fu is rounded up to the nearest 10")
-                                .padding(.top)
-                            Text("Scoring: Base Points = fu × 2^(2 + han)")
-                                .padding(.top)
-                            BulletPoint(text: "If non-dealer wins by ron: winner gets base × 4 (rounded up to nearest 100)")
-                            BulletPoint(text: "If dealer wins by ron: winner gets base × 6 (rounded up to nearest 100)")
-                            BulletPoint(text: "If non-dealer tsumo: dealer pays base × 2, other two pay base × 1")
-                            BulletPoint(text: "If dealer tsumo: everyone pays base × 2")
-                        }
-                        .frame(maxWidth: 370, alignment: .leading)
-                    }
-                    if ron || tsumo {
-                        HStack {
-                            FuIncrementButton(addingFu: $addingFu, increment: 2)
-                            FuIncrementButton(addingFu: $addingFu, increment: 4)
-                            FuIncrementButton(addingFu: $addingFu, increment: 8)
-                            FuIncrementButton(addingFu: $addingFu, increment: 10)
-                            FuIncrementButton(addingFu: $addingFu, increment: 16)
-                            FuIncrementButton(addingFu: $addingFu, increment: 32)
-                        }
-                    }
-                    ZStack {
-                        Button((addingFu == 20) ? "done" : "calculate") {
-                            fu = Int(ceil(Double(addingFu) / 10.0) * 10.0)
-                            showFu = false
-                        }
-                        .padding()
-                        if ron || tsumo {
-                            Text("Fu: \(addingFu)")
-                                .offset(x: 130)
-                        }
-                    }
-                }
-            }
-            
         }.onAppear(perform: {
             restart()
             timerDown.upstream.connect().cancel()
@@ -1610,53 +1277,24 @@ struct ContentView: View {
     }
     
     func changeRoundWind() {
-        if extraRounds {
-            if roundWind == "西" {
-                roundWind = "北"
-            } else {
-                roundWind = "西"
-            }
+        if roundWind == "東" {
+            roundWind = "南"
         } else {
-            if roundWind == "東" {
-                roundWind = "南"
-            } else {
-                roundWind = "東"
-            }
+            roundWind = "東"
         }
     }
     
     func decideSeats() {
-        // quick 3
-        if quick3 {
-            for i in playerList.indices {
-                playerList[i].name = "player " + String(i + 1)
-                playerList[i].score = 35000
-            }
-            playerList[3].score = -100000 // just to be sure it doesn't appear in the score list
-            return
-        }
-        // quick start
-        if enterPlayer1 == "" {
-            print("enterPlayer1 was empty")
-            for i in playerList.indices {
-                playerList[i].name = "player " + String(i + 1)
-            }
-            showNames = false
-            return
-        }
-        // names entered
         playerNamesShuffleList.append(enterPlayer1)
         playerNamesShuffleList.append(enterPlayer2)
         playerNamesShuffleList.append(enterPlayer3)
         playerNamesShuffleList.append(enterPlayer4)
-        // on the off chance only one or two names were entered
         for i in playerNamesShuffleList.indices {
             if playerNamesShuffleList[i] == "" {
                 playerNamesShuffleList[i] = "player" + String(i + 1)
             }
         }
-        // fourth player left blank
-        if playerNamesShuffleList[3] == "player4" {
+        if (playerNamesShuffleList[0] != "player1" && playerNamesShuffleList[3] == "player4") {
             threePlayerMode = true
             playerNamesShuffleList.remove(at: 3)
             playerList[0].score = 35000
@@ -1673,11 +1311,17 @@ struct ContentView: View {
     
     func scoreTsumo() {
         
-        let basePoints = calculateBasePoints()
-        
-        var winnerPoints = 0
-        var dealerPayment = 0
-        var nonDealerPayment = 0
+        switch han {
+        case 1: winnerPoints = 1000
+        case 2: winnerPoints = 2000
+        case 3: winnerPoints = 4000
+        case 4, 5: winnerPoints = 8000
+        case 6, 7: winnerPoints = 12000
+        case 8, 9, 10: winnerPoints = 16000
+        case 11, 12: winnerPoints = 24000
+        case 13: winnerPoints = 32000
+        default: winnerPoints = 0
+        }
         
         tsumo = false
         
@@ -1689,26 +1333,20 @@ struct ContentView: View {
         rightScoreChange = true
         
         if winner == "東" {
-            // dealer doesn't pay
-            // everyone pays base points * 2
-            nonDealerPayment = Int(ceil(Double(basePoints * 2) / 100.0) * 100.0)
-            if nonDealerPayment < 400 { nonDealerPayment = 400 }
-            nonDealerPayment += 100 * honbaCount
-            winnerPoints = (threePlayerMode ? (nonDealerPayment * 2) : (nonDealerPayment * 3))
-            honbaCount += 1
+            winnerPoints = winnerPoints + winnerPoints / 2
+            regularMinusPoints = winnerPoints / 3
+            if (threePlayerMode) {
+                // North isn't there to pay
+                winnerPoints -= regularMinusPoints
+            }
         } else {
-            dealerPayment = Int(ceil(Double(basePoints * 2) / 100.0) * 100.0)
-            if dealerPayment < 400 { dealerPayment = 400 }
-            dealerPayment += 100 * honbaCount
-            nonDealerPayment = Int(ceil(Double(basePoints * 1) / 100.0) * 100.0)
-            if nonDealerPayment < 200 { nonDealerPayment = 200 }
-            nonDealerPayment += 100 * honbaCount
-            winnerPoints = threePlayerMode ? (dealerPayment + nonDealerPayment) : (dealerPayment + nonDealerPayment * 2)
-            honbaCount = 0
+            dealerMinusPoints = winnerPoints / 2
+            regularMinusPoints = dealerMinusPoints / 2
+            if (threePlayerMode) {
+                // North isn't there to pay
+                winnerPoints -= regularMinusPoints
+            }
         }
-        print("tsumo winnerPoints = \(winnerPoints)")
-        print("nonDealerPayment = \(nonDealerPayment)")
-        print("dealerPayment = \(dealerPayment)")
         
         for i in playerList.indices {
             //handle winner
@@ -1720,85 +1358,77 @@ struct ContentView: View {
                 case 3: leftWinningPoints = winnerPoints + riichiPot
                 default: print("something went wrong")
                 }
-                
+                //totalWinningPoints = winnerPoints + riichiPot
+                riichiPot = 0
             } else {
                 //handle the losers
                 if playerList[i].wind == "東"{
                     switch i {
-                    case 0: downLosingPoints = dealerPayment
-                    case 1: rightLosingPoints = dealerPayment
-                    case 2: upLosingPoints = dealerPayment
-                    case 3: leftLosingPoints = dealerPayment
+                    case 0: downLosingPoints = dealerMinusPoints
+                    case 1: rightLosingPoints = dealerMinusPoints
+                    case 2: upLosingPoints = dealerMinusPoints
+                    case 3: leftLosingPoints = dealerMinusPoints
                     default: print("something went wrong")
                     }
                 } else {
                     switch i {
-                    case 0: downLosingPoints = nonDealerPayment
-                    case 1: rightLosingPoints = nonDealerPayment
-                    case 2: upLosingPoints = nonDealerPayment
-                    case 3: leftLosingPoints = nonDealerPayment
+                    case 0: downLosingPoints = regularMinusPoints
+                    case 1: rightLosingPoints = regularMinusPoints
+                    case 2: upLosingPoints = regularMinusPoints
+                    case 3: leftLosingPoints = regularMinusPoints
                     default: print("something went wrong")
                     }
                 }
             }
             playerList[i].riichi = false
             playerList[i].tenpai = false
-            riichiPot = 0
-            riichiPotIndicator = 0
             han = 1
-            fu = 20
-            addingFu = 20
         }
+        
+        
     }
     
     func scoreRon() {
         
-        let basePoints = calculateBasePoints()
-        
-        // Determine multiplier based on dealer status
-        let multiplier = (winner == "東") ? 6 : 4
-        print("winner = \(winner), multiplier = \(multiplier)")
-        var winnerPoints = Int(ceil(Double(basePoints * multiplier) / 100.0) * 100.0)
-        print("winnerPoints = \(winnerPoints)")
-        
-        // Apply minimum Ron points
-        if winner == "東" {
-            // Dealer minimum
-            if winnerPoints < 1200 { winnerPoints = 1200 }
-        } else {
-            // Non-dealer minimum
-            if winnerPoints < 1000 { winnerPoints = 1000 }
-        }
-        winnerPoints += 300 * honbaCount
-        if winner == "東" {
-            honbaCount += 1
-        } else {
-            honbaCount = 0
+        switch han {
+        case 1: winnerPoints = 1000
+        case 2: winnerPoints = 2000
+        case 3: winnerPoints = 4000
+        case 4, 5: winnerPoints = 8000
+        case 6, 7: winnerPoints = 12000
+        case 8, 9, 10: winnerPoints = 16000
+        case 11, 12: winnerPoints = 24000
+        case 13: winnerPoints = 32000
+        default: winnerPoints = 0
         }
         
-        // Update winner
+        ron = false
+        
         for i in playerList.indices {
             if playerList[i].winner {
                 switch i {
-                case 0:
-                    downScoreChange = true
-                    downWinningPoints = winnerPoints + riichiPot
-                case 1:
-                    rightScoreChange = true
-                    rightWinningPoints = winnerPoints + riichiPot
-                case 2:
-                    upScoreChange = true
-                    upWinningPoints = winnerPoints + riichiPot
-                case 3:
-                    leftScoreChange = true
-                    leftWinningPoints = winnerPoints + riichiPot
-                default: break
+                case 0: downScoreChange = true
+                case 1: rightScoreChange = true
+                case 2: upScoreChange = true
+                case 3: leftScoreChange = true
+                default: print("something went wrong")
                 }
+                if playerList[i].wind == "東" {
+                    winnerPoints = winnerPoints + winnerPoints / 2
+                }
+                switch i {
+                case 0: downWinningPoints = winnerPoints + riichiPot
+                case 1: rightWinningPoints = winnerPoints + riichiPot
+                case 2: upWinningPoints = winnerPoints + riichiPot
+                case 3: leftWinningPoints = winnerPoints + riichiPot
+                default: print("something went wrong")
+                }
+                //totalWinningPoints = winnerPoints + riichiPot
+                riichiPot = 0
             }
             playerList[i].riichi = false
             playerList[i].tenpai = false
         }
-        // handle loser
         for i in playerList.indices {
             if playerList[i].wind == loser {
                 switch i {
@@ -1818,36 +1448,7 @@ struct ContentView: View {
                 }
             }
         }
-        riichiPot = 0
-        riichiPotIndicator = 0
         han = 1
-        fu = 20
-        addingFu = 20
-        ron = false
-    }
-    
-    func calculateBasePoints() -> Int {
-        if !calculateFu {
-            fu = tsumo ? 30 : 20
-        }
-        if fu > 20 && fu < 30 && fu != 25 {
-            fu = 30
-        }
-        print("fu = \(fu)")
-        
-        var basePoints = fu * Int(pow(2.0, Double(2 + han)))
-        print("\nbasePoints = \(basePoints)")
-        
-        if han >= 5 {
-            switch han {
-            case 5: basePoints = 2000
-            case 6...7: basePoints = 3000
-            case 8...10: basePoints = 4000
-            case 11...12: basePoints = 6000
-            default: basePoints = 8000
-            }
-        }
-        return basePoints
     }
     
     func scoreExhaust() {
@@ -1858,9 +1459,6 @@ struct ContentView: View {
                 tenpaiCounter += 1
             }
             playerList[i].riichi = false    //pot stays the same
-        }
-        if tenpaiCounter > 0 {
-            honbaCount += 1
         }
         //if no one or everyone is in tenpai nothing happens
         if threePlayerMode && (tenpaiCounter == 0 || tenpaiCounter == 3) {
@@ -1895,7 +1493,7 @@ struct ContentView: View {
                 } else {
                     regularMinusPoints = winnerPoints * 3   //one player pays 3000
                 }
-            }
+            }   
             //winner and minus points decided
             for i in playerList.indices {
                 if playerList[i].tenpai {
@@ -1926,7 +1524,7 @@ struct ContentView: View {
                     }
                 }   //winner and minus scored, handled in score change in the above view
             }
-            riichiPotIndicator = riichiPot / 1000
+            
         }
         
         exhaust = false
@@ -1949,7 +1547,6 @@ struct ContentView: View {
         enterPlayer4 = ""
         enterNames = true
         threePlayerMode = false
-        quick3 = false
         windsList = ["","東", "南", "西", "北"]
         player1.wind = windsList[1]
         player2.wind = windsList[2]
@@ -1965,9 +1562,6 @@ struct ContentView: View {
         regularMinusPoints = 0
         riichiPot = 0
         han = 1
-        fu = 20
-        addingFu = 20
-        calculateFu = true
         winner = ""
         loser = ""
         roundWind = "東"
@@ -1988,22 +1582,11 @@ struct ContentView: View {
             let popped = windsList.popLast()
             windsList.insert(popped ?? "East", at: 1)
         }
-        if windsList[1] == "東" {
-            switch roundWind {
-            case "東": roundWind = "南"
-            case "南":
-                extraRounds = true
-                roundWind = "西"
-            case "西": roundWind = "北"
-            default:
-                extraRounds = false
-                roundWind = "東"
-            }
-        }
         playerList[0].wind = windsList[1]
         playerList[1].wind = windsList[2]
         playerList[2].wind = windsList[3]
         playerList[3].wind = windsList[4]
+        
     }
     
     func displayResults() {
@@ -2018,116 +1601,3 @@ struct ContentView: View {
         }
     }
 
-struct BulletPoint: View {
-    var text: String
-    
-    var body: some View {
-        HStack(alignment: .top, spacing: 8) {
-            Text("•")
-            Text(text)
-                .multilineTextAlignment(.leading)
-        }
-        .padding(5)
-    }
-}
-
-class AudioManager: ObservableObject {
-    var audioPlayer: AVAudioPlayer?
-
-    func playSound() {
-        // Configure AVAudioSession to allow background music to continue
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default, options: [])
-            try AVAudioSession.sharedInstance().setActive(true)
-        } catch {
-            print("Error setting up audio session: \(error)")
-        }
-
-        // Load and play the sound
-        guard let soundURL = Bundle.main.url(forResource: "act_rich", withExtension: "mp3") else {
-            print("Error: MP3 file not found")
-            return
-        }
-
-        do {
-            audioPlayer = try AVAudioPlayer(contentsOf: soundURL)
-            audioPlayer?.play()
-            print("Playing sound effect...")
-        } catch {
-            print("Error playing sound: \(error)")
-        }
-    }
-}
-
-struct FuIncrementButton: View {
-    @Binding var addingFu: Int   // bind to your state variable
-    let increment: Int           // how much this button adds
-
-    var body: some View {
-        Button {
-            if addingFu + increment <= 110 {
-                addingFu += increment
-            }
-        } label: {
-            Text("+\(increment)")
-                .font(.system(size: 18, weight: .bold))
-                .frame(width: 55)
-                .padding(.vertical, 6)
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .clipShape(Capsule())
-        }
-    }
-}
-
-struct ShowFuButton: View {
-    @Binding var showFu: Bool
-    @Binding var timerOn: Bool
-    @Binding var ron: Bool
-    @Binding var tsumo: Bool
-    @Binding var calculateFu: Bool
-    @Binding var han: Int
-    @State var justToggled = false
-    var body: some View {
-        VStack {
-            HStack {
-                Spacer()
-                Button {
-                    if !justToggled {
-                        showFu = true
-                    }
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill((ron || tsumo) ? Color.black : Color.clear)
-                            .contentShape(Circle())
-                            .frame(height: 40)
-                        Text("符")
-                            .font(.title2)
-                            .foregroundStyle(
-                                (!calculateFu || han >= 5)
-                                ? Color.gray
-                                : ((ron || tsumo) && calculateFu
-                                   ? Color.cyan
-                                   : Color.black)
-                            )
-                    }
-                }
-                .padding(.init(top: 0, leading: 0, bottom: -10, trailing: 30))
-                .disabled(timerOn ? true : false)
-                .simultaneousGesture(
-                    LongPressGesture(minimumDuration: 0.5)
-                        .onEnded { _ in
-                            calculateFu.toggle()
-                            justToggled = true
-                            // small delay so it doesn't open the fu screen
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                justToggled = false
-                            }
-                        }
-                )
-            }
-            Spacer()
-        }
-    }
-}

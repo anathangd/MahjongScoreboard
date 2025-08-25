@@ -27,7 +27,7 @@ struct RiichiButton: View {
                     .frame(width: 300, height: 30)
                     .border(.black, width: 1)
                     .foregroundColor(.gray)
-                    .opacity(0.06)
+                    .opacity(0.10)
             }
             
         }
