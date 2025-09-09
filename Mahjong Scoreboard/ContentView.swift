@@ -38,7 +38,6 @@ struct ContentView: View {
         Player(name: "player3", score: 25000, wind: "西", winner: false, loser: false, tenpai: false, riichi: false),
         Player(name: "player4", score: 25000, wind: "北", winner: false, loser: false, tenpai: false, riichi: false)
     ]
-    @State var winnerPoints = 0
     @State var dealerMinusPoints = 0
     @State var regularMinusPoints = 0
     @State var riichiPot = 0
@@ -108,7 +107,23 @@ struct ContentView: View {
     @State var riichiPotIndicator = 0
     @State var honbaCount = 0
     @State var displayScoring = false
-    @State var scoringScreen = true
+    @State var scoringScreen = false
+    
+    @State var basePoints = 0
+    @State var winnerPoints = 0
+    @State var dealerPayment = 0
+    @State var nonDealerPayment = 0
+    @State var wasTsumo = false
+    
+    @State var multiplier = 4
+    @State var wasRon = false
+    
+    @State private var showHonbaInfo = false
+    
+    @State private var showLeftKanji = false
+    @State private var showRightKanji = false
+    @State private var showTopKanji = false
+    @State private var showBottomKanji = false
     
     var body: some View {
         ZStack {
@@ -192,6 +207,29 @@ struct ContentView: View {
             }
             .font(.system(size: 50))
             
+            if showTopKanji {
+                Text("一 二 三 四 五 六 七 八 九")
+                    .offset(x: 0, y: 425)
+                    .font(.system(size: 20))
+                    .rotationEffect(Angle(degrees: 180))
+            }
+            if showBottomKanji {
+                Text("一 二 三 四 五 六 七 八 九")
+                    .font(.system(size: 20))
+                    .offset(x: 0, y: 425)
+            }
+            if showLeftKanji {
+                Text("一 二 三 四 五 六 七 八 九")
+                    .font(.system(size: 20))
+                    .rotationEffect(Angle(degrees: 90))
+                    .offset(x: -195)
+            }
+            if showRightKanji {
+                Text("一 二 三 四 五 六 七 八 九")
+                    .font(.system(size: 20))
+                    .rotationEffect(Angle(degrees: -90))
+                    .offset(x: 195)
+            }
             //top and bottom players
             VStack {
                 //top player
@@ -199,6 +237,9 @@ struct ContentView: View {
                     //.frame(width: 200, height: 70)
                     .rotationEffect(Angle(degrees: 180))
                     .monospacedDigit()
+                    .onTapGesture {
+                        showTopKanji.toggle()
+                    }
                 ZStack {
                     Menu {
                         Button("Ron") {
@@ -223,9 +264,6 @@ struct ContentView: View {
                             playerList[1].loser = true
                             playerList[3].loser = true
                         }
-                        Button("Cancel", role: .destructive) {
-                            
-                        }
                     } label: {
                         Text(playerList[2].wind).rotationEffect(Angle(degrees: 180))
                     }
@@ -240,12 +278,14 @@ struct ContentView: View {
                             playerList[2].tenpai = false
                             playerList[2].score += 1000
                             riichiPot -= 1000
+                            riichiPotIndicator = riichiPot / 1000
                         } else {
                             audioManager.playSound()
                             playerList[2].riichi = true
                             playerList[2].tenpai = true
                             playerList[2].score -= 1000
                             riichiPot += 1000
+                            riichiPotIndicator = riichiPot / 1000
                         }
                         
                     }
@@ -259,18 +299,17 @@ struct ContentView: View {
                             playerList[0].tenpai = false
                             playerList[0].score += 1000
                             riichiPot -= 1000
+                            riichiPotIndicator = riichiPot / 1000
                         } else {
                             audioManager.playSound()
                             playerList[0].riichi = true
                             playerList[0].tenpai = true
                             playerList[0].score -= 1000
                             riichiPot += 1000
+                            riichiPotIndicator = riichiPot / 1000
                         }
                     }
                 Menu {
-                    Button("Cancel", role: .destructive) {
-                        
-                    }
                     Button("Tsumo") {
                         tsumo = true
                         playerList[0].winner = true
@@ -301,6 +340,9 @@ struct ContentView: View {
                     .frame(width: 200, height: 70)
                     //.background(.yellow)
                     .monospacedDigit()
+                    .onTapGesture {
+                        showBottomKanji.toggle()
+                    }
             }
             .font(.system(size: 50))
             
@@ -326,9 +368,6 @@ struct ContentView: View {
                             playerList[1].loser = true
                             playerList[2].loser = true
                         }
-                        Button("Cancel", role: .destructive) {
-                            
-                        }
                     } label: {
                         Text(playerList[3].wind)
                     }
@@ -338,6 +377,9 @@ struct ContentView: View {
                     if (!threePlayerMode) {
                         Text(String(playerList[3].score))
                             .monospacedDigit()
+                            .onTapGesture {
+                                showLeftKanji.toggle()
+                            }
                         
                     }
                 }
@@ -349,9 +391,6 @@ struct ContentView: View {
                 Spacer()
                 LazyHStack {
                     Menu {
-                        Button("Cancel", role: .destructive) {
-                            
-                        }
                         Button("Tsumo") {
                             tsumo = true
                             playerList[1].winner = true
@@ -379,6 +418,9 @@ struct ContentView: View {
                     .disabled(timerOn ? true : false)
                     Text(String(playerList[1].score))
                         .monospacedDigit()
+                        .onTapGesture {
+                            showRightKanji.toggle()
+                        }
                 }
                 .frame(width: 200, height: 40)
                 .padding(.init(top: 30, leading: 0, bottom: -70, trailing: 0))
@@ -396,12 +438,14 @@ struct ContentView: View {
                             playerList[3].tenpai = false
                             playerList[3].score += 1000
                             riichiPot -= 1000
+                            riichiPotIndicator = riichiPot / 1000
                         } else {
                             audioManager.playSound()
                             playerList[3].riichi = true
                             playerList[3].tenpai = true
                             playerList[3].score -= 1000
                             riichiPot += 1000
+                            riichiPotIndicator = riichiPot / 1000
                         }
                     }
                     .rotationEffect(Angle(degrees: 90))
@@ -415,12 +459,14 @@ struct ContentView: View {
                             playerList[1].tenpai = false
                             playerList[1].score += 1000
                             riichiPot -= 1000
+                            riichiPotIndicator = riichiPot / 1000
                         } else {
                             audioManager.playSound()
                             playerList[1].riichi = true
                             playerList[1].tenpai = true
                             playerList[1].score -= 1000
                             riichiPot += 1000
+                            riichiPotIndicator = riichiPot / 1000
                         }
                     }.rotationEffect(Angle(degrees: 90))
             }
@@ -773,67 +819,77 @@ struct ContentView: View {
             
             // riichi pot and honba indicator
             VStack {
-                HStack {
-                    // riichi pot
-                    VStack {
-                        ZStack {
-                            Rectangle()
-                                .frame(width: 10, height: 30)
-                                .border(.black, width: 1)
-                                .foregroundColor(.white)
-                            Circle()
-                                .frame(height: 5)
-                                .foregroundColor(.red)
+                Button {
+                    showHonbaInfo = true
+                } label: {
+                    HStack {
+                        // riichi pot
+                        VStack {
+                            ZStack {
+                                Rectangle()
+                                    .frame(width: 10, height: 30)
+                                    .border(.black, width: 1)
+                                    .foregroundColor(.white)
+                                Circle()
+                                    .frame(height: 5)
+                                    .foregroundColor(.red)
+                            }
+                            Text(String(riichiPotIndicator))
+                                .font(.caption)
                         }
-                        Text(String(riichiPotIndicator))
-                            .font(.caption)
-                    }
-                    // honba indicator
-                    VStack {
-                        ZStack {
-                            Rectangle()
-                                .frame(width: 10, height: 30)
-                                .border(.black, width: 1)
-                                .foregroundColor(.white)
-                            VStack(spacing: 2) {
-                                HStack(spacing: 1) {
-                                    Circle()
-                                        .frame(height: 2)
-                                        .foregroundColor(.black)
-                                    Circle()
-                                        .frame(height: 2)
-                                        .foregroundColor(.black)
-                                }
-                                HStack(spacing: 1) {
-                                    Circle()
-                                        .frame(height: 2)
-                                        .foregroundColor(.black)
-                                    Circle()
-                                        .frame(height: 2)
-                                        .foregroundColor(.black)
-                                }
-                                HStack(spacing: 1) {
-                                    Circle()
-                                        .frame(height: 2)
-                                        .foregroundColor(.black)
-                                    Circle()
-                                        .frame(height: 2)
-                                        .foregroundColor(.black)
-                                }
-                                HStack(spacing: 1) {
-                                    Circle()
-                                        .frame(height: 2)
-                                        .foregroundColor(.black)
-                                    Circle()
-                                        .frame(height: 2)
-                                        .foregroundColor(.black)
+                        // honba indicator
+                        VStack {
+                            ZStack {
+                                Rectangle()
+                                    .frame(width: 10, height: 30)
+                                    .border(.black, width: 1)
+                                    .foregroundColor(.white)
+                                VStack(spacing: 2) {
+                                    HStack(spacing: 1) {
+                                        Circle()
+                                            .frame(height: 2)
+                                            .foregroundColor(.black)
+                                        Circle()
+                                            .frame(height: 2)
+                                            .foregroundColor(.black)
+                                    }
+                                    HStack(spacing: 1) {
+                                        Circle()
+                                            .frame(height: 2)
+                                            .foregroundColor(.black)
+                                        Circle()
+                                            .frame(height: 2)
+                                            .foregroundColor(.black)
+                                    }
+                                    HStack(spacing: 1) {
+                                        Circle()
+                                            .frame(height: 2)
+                                            .foregroundColor(.black)
+                                        Circle()
+                                            .frame(height: 2)
+                                            .foregroundColor(.black)
+                                    }
+                                    HStack(spacing: 1) {
+                                        Circle()
+                                            .frame(height: 2)
+                                            .foregroundColor(.black)
+                                        Circle()
+                                            .frame(height: 2)
+                                            .foregroundColor(.black)
+                                    }
                                 }
                             }
+                            Text(String(honbaCount))
+                                .font(.caption)
                         }
-                        Text(String(honbaCount))
-                            .font(.caption)
+                        Spacer()
                     }
-                    Spacer()
+                }
+                .buttonStyle(.plain)
+                .alert("", isPresented: $showHonbaInfo) {
+                    Button("Ah, okay", role: .cancel) { }
+                } message: {
+                    Text("\(riichiPot) points in the riichi pot\nHonba count: \(honbaCount)\n\nThe honba count increases when either the dealer wins or there is an exhaustive draw and at least one person was in tenpai. The next winner adds 300 times the honba count to their score!")
                 }
                 .padding(.init(top: 0, leading: 50, bottom: -10, trailing: 0))
                 Spacer()
@@ -1061,7 +1117,7 @@ struct ContentView: View {
                                 VStack {
                                     Text("Fu:")
                                     Picker("Fu", selection: $fu) {
-                                        ForEach([20, 30, 40, 50, 60, 70, 80, 90, 100, 110], id: \.self) { value in
+                                        ForEach([20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 110], id: \.self) { value in
                                             Text("\(value)")
                                                 .foregroundColor(han >= 5 ? .gray : .primary)
                                                 .tag(value)
@@ -1079,7 +1135,6 @@ struct ContentView: View {
                         Spacer()
                         Spacer()
                         Button {
-                            tsumo = false
                             scoreTsumo()
                         } label: {
                             Text("submit")
@@ -1100,16 +1155,18 @@ struct ContentView: View {
             // overlaid fu button and display scoring
             if ron || tsumo {
                 ShowFuButton(showFu: $showFu, timerOn: $timerOn, ron: $ron, tsumo: $tsumo, calculateFu: $calculateFu, han: $han)
-                Button("display scoring") {
-                    displayScoring.toggle()
+                if !threePlayerMode {
+                    Button("display scoring") {
+                        displayScoring.toggle()
+                    }
+                    .foregroundStyle(.white)
+                    .frame(width: 150, height: 40)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(displayScoring ? Color.blue : Color.gray)
+                    )
+                    .offset(y: 300)
                 }
-                .foregroundStyle(.white)
-                .frame(width: 150, height: 40)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(displayScoring ? Color.blue : Color.gray)
-                )
-                .offset(y: 200)
             }
             
             if exhaust {
@@ -1158,7 +1215,7 @@ struct ContentView: View {
                     .padding(.horizontal, -20)
                     VStack {
                         Spacer()
-                        Button("done") {
+                        Button("submit") {
                             scoreExhaust()
                         }
                         .font(.system(size: 30))
@@ -1176,6 +1233,7 @@ struct ContentView: View {
                         Button("quick 3") {
                             if (!editNames) {
                                 threePlayerMode = true
+                                displayScoring = false
                                 quick3 = true
                                 decideSeats()
                             }
@@ -1223,7 +1281,169 @@ struct ContentView: View {
             }
             
             if scoringScreen {
-                ScoringDisplay()
+                ZStack {
+                    Rectangle()
+                        .ignoresSafeArea()
+                        .foregroundColor(.black)
+                        .opacity(0.8)
+                    VStack {
+                        Text("\(winner)の勝ち")
+                            .font(.system(size: 50))
+                            .padding()
+                        
+                        if wasTsumo {
+                            if winner == "東" {
+                                VStack {
+                                    Text("Each player pays: ")
+                                    Text("\(String(format: "%d", nonDealerPayment))")
+                                }
+                                .font(.largeTitle)
+                                .padding()
+                                Text("Han: \(han)\(han < 5 ? ", Fu: \(fu)" : "")")
+                                if han < 5 {
+                                    HStack(spacing: 2) {
+                                        Text("Base points = \(String(format: "%d", fu)) fu * 2")
+                                        Text("2 + \(String(format: "%d", han)) han")
+                                            .font(.system(size: 12))
+                                            .baselineOffset(8)
+                                        Text(" = \(String(format: "%d", fu * Int(pow(2.0, Double(2 + han)))))")
+                                    }
+                                }
+                            } else {
+                                VStack {
+                                    Text("東 pays:")
+                                    Text("\(String(format: "%d", dealerPayment))")
+                                }
+                                .font(.largeTitle)
+                                .padding()
+                                VStack {
+                                    Text("Han: \(han)\(han < 5 ? ", Fu: \(fu)" : "")")
+                                    if han < 5 {
+                                        HStack(spacing: 2) {
+                                            Text("Base points = \(String(format: "%d", fu)) fu * 2")
+                                            Text("2 + \(String(format: "%d", han)) han")
+                                                .font(.system(size: 12))
+                                                .baselineOffset(8)
+                                            Text(" = \(String(format: "%d", fu * Int(pow(2.0, Double(2 + han)))))")
+                                        }
+                                    }
+                                    Text("Dealer base point multiplier: 2")
+                                    Text("\(String(format: "%d", basePoints)) * 2 = \(String(format: "%d", basePoints * 2))")
+                                    Text("Rounded up to the nearest hundred: \(String(format: "%d", Int(ceil(Double(basePoints * 2) / 100.0) * 100.0)))")
+                                    Text("Honba points: \(String(format: "%d", honbaCount)) * 100 = \(String(format: "%d", honbaCount * 100))")
+                                    Text("Payout: \(String(format: "%d", Int(ceil(Double(basePoints * 2) / 100.0) * 100.0))) + \(String(format: "%d", honbaCount * 100)) = \(String(format: "%d", dealerPayment))")
+                                }
+                                VStack {
+                                    Text("Non-dealers pay:")
+                                    Text("\(String(format: "%d", nonDealerPayment))")
+                                }
+                                .font(.largeTitle)
+                                .padding()
+                            }
+                            VStack {
+                                if winner == "東" {
+                                    Text("Base point multiplier: 2")
+                                } else {
+                                    Text("Non-dealer base point multiplier: 1")
+                                }
+                                if winner == "東" {
+                                    
+                                    Text("\(String(format: "%d", basePoints)) * 2 = \(String(format: "%d", basePoints * 2))")
+                                    Text("Rounded up to the nearest hundred: \(String(format: "%d", Int(ceil(Double(basePoints * 2) / 100.0) * 100.0)))")
+                                    Text("Honba points: \(String(format: "%d", honbaCount)) * 100 = \(String(format: "%d", honbaCount * 100))")
+                                    Text("Payout: \(String(format: "%d", Int(ceil(Double(basePoints * 2) / 100.0) * 100.0))) + \(String(format: "%d", honbaCount * 100)) = \(String(format: "%d", nonDealerPayment))")
+                                    
+                                } else {
+                                    Text("\(String(format: "%d", basePoints)) * 1 = \(String(format: "%d", basePoints * 1))")
+                                    Text("Rounded up to the nearest hundred: \(String(format: "%d", Int(ceil(Double(basePoints * 1) / 100.0) * 100.0)))")
+                                    Text("Non-dealer payout: \(String(format: "%d", Int(ceil(Double(basePoints * 1) / 100.0) * 100.0))) * 1 + \(String(format: "%d", honbaCount * 100)) = \(String(format: "%d", nonDealerPayment))")
+                                }
+                            }
+                            VStack {
+                                Text("Total winnings:")
+                                if winner == "東" {
+                                    Text("\(String(format: "%d", nonDealerPayment * 3 + riichiPot))")
+                                } else {
+                                    Text("\(String(format: "%d", dealerPayment + (nonDealerPayment * 2) + riichiPot))")
+                                }
+                            }
+                            .padding()
+                            .font(.largeTitle)
+                            VStack {
+                                if winner == "東" {
+                                    Text("Payout: \(String(format: "%d", nonDealerPayment)) * 3 = \(String(format: "%d", nonDealerPayment * 3))")
+                                } else {
+                                    Text("Payout: \(String(format: "%d", dealerPayment)) + \(String(format: "%d", nonDealerPayment)) * 2 = \(String(format: "%d", dealerPayment + nonDealerPayment * 2))")
+                                }
+                                if riichiPot > 0 {
+                                    Text("Riichi pot: \(String(format: "%d", riichiPot))")
+                                    if winner == "東" {
+                                        Text("\(String(format: "%d", nonDealerPayment * 3)) + \(String(format: "%d", riichiPot)) = \(String(format: "%d", nonDealerPayment * 3 + riichiPot))")
+                                    } else {
+                                        Text("\(String(format: "%d", dealerPayment + nonDealerPayment * 2)) + \(String(format: "%d", riichiPot)) = \(String(format: "%d", dealerPayment + nonDealerPayment * 2 + riichiPot))")
+                                    }
+                                }
+                                
+                            }
+                        }
+                        
+                        if wasRon {
+                            VStack {
+                                Text("\(loser) pays:")
+                                Text("\(String(format: "%d",winnerPoints))")
+                            }
+                            .font(.largeTitle)
+                            .padding()
+                            VStack {
+                                Text("Han: \(han)\(han < 5 ? ", Fu: \(fu)" : "")")
+                                if han < 5 {
+                                    HStack(spacing: 2) {
+                                        Text("Base points = \(fu) fu * 2")
+                                        Text("2 + \(han) han")
+                                            .font(.system(size: 12))
+                                            .baselineOffset(8)
+                                        Text(" = \(String(format: "%d", fu * Int(pow(2.0, Double(2 + han)))))")
+                                    }
+                                }
+                                Text("Base point multiplier: \(multiplier) (\(winner == "東" ? "dealer" : "non-dealer"))")
+                                Text("\(String(format: "%d", basePoints)) * \(multiplier) = \(String(format: "%d", basePoints * multiplier))")
+                                Text("Rounded up the nearest hundred or minimum: \(String(format: "%d", winnerPoints - honbaCount * 300))")
+                                Text("Honba points: \(honbaCount) * 300 = \(honbaCount * 300)")
+                                Text("Payout: \(String(format: "%d", (winnerPoints - honbaCount * 300))) + \(honbaCount * 300) = \(String(format: "%d", winnerPoints))")
+                            }
+                            VStack {
+                                Text("Total winnings:")
+                                Text("\(String(format: "%d",winnerPoints + riichiPot))")
+                            }
+                            .padding()
+                            .font(.largeTitle)
+                            VStack {
+                                Text("Payout: \(String(format: "%d", winnerPoints))")
+                                Text("Riichi pot: \(String(format: "%d", riichiPot))")
+                                Text("\(String(format: "%d", winnerPoints)) + \(String(format: "%d", riichiPot)) = \(String(format: "%d", winnerPoints + riichiPot))")
+                                
+                            }
+                        }
+                        
+                        if winner == "東" {
+                            Text("Honba increases by 1")
+                                .font(.title2)
+                                .padding()
+                        }
+                    }
+                    .foregroundStyle(.white)
+                    Color.clear
+                            .contentShape(Rectangle()) // makes the whole rect tappable
+                            .ignoresSafeArea()         // stretch to edges
+                            .onTapGesture {
+                                if wasTsumo {
+                                    handleTsumoScoring()
+                                }
+                                if wasRon {
+                                    handleRonScoring()
+                                }
+                            }
+                }
             }
             
             if showNames {
@@ -1378,9 +1598,7 @@ struct ContentView: View {
                     Rectangle()
                         .foregroundColor(.black)
                         .opacity(0.7)
-                        .onTapGesture {
-                            displayResultsScreen = false
-                        }
+                        
                     VStack {
                         Text(newArr[0].name + ": " + String(newArr[0].score))
                             .font(.system(size: 50))
@@ -1396,6 +1614,11 @@ struct ContentView: View {
                     .font(.system(size: 30))
                     .foregroundColor(.white)
                     .padding(40)
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            displayResultsScreen = false
+                        }
                 }.ignoresSafeArea()
             }
             
@@ -1406,101 +1629,19 @@ struct ContentView: View {
                 VStack {
                     ScrollView(showsIndicators: false) {
                         VStack(alignment: .leading) {
-                            Text("1 Han (Closed)\n")
-                                .font(.title2)
-                            Text("門前自摸(めんぜんつも)(**Tsumo**, \nFully Concealed Hand) - self draw")
-                            Divider()
-                            Text("立直(リーチ)(**Riichi**) - no pon or chii")
-                            Divider()
-                            Text("一発(イッパツ)(**Ippatsu**) - win within first rotation after riichi, also can't be interrupted by tile calls")
-                            Divider()
-                            Text("平和(ピンフ)(**Pinfu**) - all sequences and must end with a two-sided wait")
-                            Divider()
-                            Text("一盃口(イーペイコー)\n(**Pure Double Sequence**) - 112233 kind of double sequence\n")
-                            
-                            Text("1 Han\n")
-                                .font(.title2)
-                            Text("海底撈月(ハイテイラオユエ)\n(**Under the Sea**) - Tsumo with the last drawn tile from the wall")
-                            Divider()
-                            Text("河底撈魚(ホウテイラオユイ)\n(**Under the River**) - Ron with the last discarded tile")
-                            Divider()
-                            Text("嶺上開花(リンシャンカイホウ)\n(**After a Kan**) - win with a tile drawn from the dead wall immediately after calling a Kan")
-                            Divider()
-                            Text("搶槓(チャンカン)(**Robbing a Kan**) - calling Ron on another player's Kan (when you have a Tenpai for Thirteen Orphans, you can call on a Closed Kan)")
-                            Divider()
-                            Text("断幺九(タンヤオ)(**All Simples**) - winning with no honor or terminal tiles (2-8 number tiles only)")
-                            Divider()
-                            Text("役牌(**やくはい**) - a hand with at least one group of dragon, round wind, or seat wind tiles\n")
-                            
-                            Text("2 Han\n")
-                                .font(.title2)
-                            Text("両立直(ダブリー)(**Double Riichi**) - declare Riichi with your starting hand before any tiles are called")
-                            Divider()
-                            Text("全帯幺九(チャンタ)(**Half Outside Hand**) - every sequence, triplet and pair contains at least one terminal tile or honor tiles (-1 Han if open)")
-                            Divider()
-                            Text("三色同順(サンショクドウジュン)(**Mixed Triple Sequence**) - three sequences with the same numbers out of the three different number tile suits (-1 Han if open)")
-                            Divider()
-                            Text("一気通貫(イッキツウカン)(**Pure Straight**) - complete sequence 1-9 (-1 Han if open)")
-                            Divider()
-                            Text("対々(トイトイ)(**All Triplets**) - all triplets (or quads), no sequences")
-                            Divider()
-                            Text("三暗刻(サンアンコウ)(**Three Concealed Triplets**) - three sets of triplets (or quads) that were formed without calling any tiles (the fourth can be open)")
-                            Divider()
-                            Text("三色同刻(サンショクドウコウ)(**Triple Triplets**) - three triplets with the same number in each suit")
-                            Divider()
-                            Text("三槓子(サンカンツ)(**Three Kans**) - three Kans, may be open")
-                            Divider()
-                            Text("七対子(チートイツ)(**Seven Pairs**) - seven pairs, closed only")
-                            Divider()
-                            Text("混老頭(ホンロウトウ)(**All Terminals and Honors**) - nothing but terminals and honors (may be considered as 4 Han because it is impossible to score this hand without Seven Pairs or All Triples), may be open")
-                            Divider()
-                            Text("小三元(ショウサンゲン)(**Little Three Dragons**) - two triplets of dragon tiles plus a pair of the third, may be open\n")
-                            
-                            Text("3 Han\n")
-                                .font(.title2)
-                            Text("混一色(ホンイーソー)(**Half Flush**) - single suit with honor tiles (-1 Han if open)")
-                            Divider()
-                            Text("純全帯么(ジュンチャン)(**Fully Outside Hand**) - all sets contain at least one terminal tile (-1 Han if open)")
-                            Divider()
-                            Text("二盃口(リャンペイコー)(**Twice Pure Double Sequence**) - two sets of Pure Double Sequence in two different suits (doesn't combine with Seven Pairs)(closed only)\n")
-                            
-                            Text("6 Han\n")
-                                .font(.title2)
-                            Text("清一色(チンイーソー)(**Full Flush**) - same suit of number tiles (-1 Han if open)\n")
-                            
-                            Text("Mangan\n")
-                                .font(.title2)
-                            Text("流し満貫(ナガシマンガン)(**Mangan at Draw**) - all your discards were terminal or honors and no one called any of your tiles (5 Han)\n")
-                            
-                            Text("Yakuman\n")
-                                .font(.title2)
-                            Text("数え役満(**かぞえやくまん**) - if your hand adds up to 13+ Han")
-                            Divider()
-                            Text("国士無双(コクシムソウ)(**Thirteen Orphans**) - 191919 of each suit, all four winds, and all three dragons plus a duplicate of any one of those tiles")
-                            Divider()
-                            Text("四暗刻(スーアンコウ)(**Four Concealed Triplets**) - four closed triplets (closed only, you can only call the last tile for the pair)")
-                            Divider()
-                            Text("大三元(ダイサンゲン)(**Big Three Dragons**) - three triplets of all three dragons")
-                            Divider()
-                            Text("小四喜(ショウスーシー)(**Four Little Winds**) - three triplets or quads of wind tiles, plus a pair of the fourth")
-                            Divider()
-                            Text("大四喜(ダイスーシー)(**Big Four Winds**) - four triplets or quads of all four winds")
-                            Divider()
-                            Text("字一色(ツーイーソー)(**All Honors**) - nothing but triplets of honor tiles")
-                            Divider()
-                            Text("清老頭(チンロウトウ)(**All Terminals**) - nothing but triplets of terminal tiles")
-                            Divider()
-                            Text("緑一色(リューイーソー)(**All Green**) - nothing but sequences or triplets of green tiles (23468 bamboo and/or green dragon)")
-                            Divider()
-                            Text("九連宝燈(チューレンポートウ)(**Nine Gates**) - 1112345678999 of character tiles plus any extra of one of these tiles (closed only)")
-                            Divider()
-                            Text("四槓子(スーカンツ)(**Four Quads**) - four open or closed Kan")
-                            Divider()
-                            Text("天和(テンホー)(**Blessing of Heaven**) - win by Tsumo as the dealer in the first turn with the first draw")
-                            Divider()
-                            Text("地和(チーホー)(**Blessing of Earth**) - win by Tsumo as a non-dealer in the first turn before any tiles are called\n")
+                            ForEach(yakuList) { yaku in
+                                Text(yaku.han)
+                                    .font(.title2)
+                                    .padding(.top)
+                                    .padding(.bottom)
+
+                                ForEach(yaku.entries, id: \.self) { entry in
+                                    Text(entry)
+                                    Divider()
+                                }
+                            }
                         }
-                        .frame(maxWidth: 330, alignment: .leading)
+                        .frame(maxWidth: 370, alignment: .leading)
                     }
                     Button("done") {
                         showYaku = false
@@ -1541,7 +1682,9 @@ struct ContentView: View {
                                 .padding(.top)
                             Text("Fu is rounded up to the nearest 10")
                                 .padding(.top)
-                            Text("Scoring: Base Points = fu × 2^(2 + han)")
+                            Text("Scoring: Base points = fu × 2^(2 + han)")
+                                .padding(.top)
+                            Text("Base points cap at 2000 and are fixed after a hand reaches or exceeds 5 han")
                                 .padding(.top)
                             BulletPoint(text: "If non-dealer wins by ron: winner gets base × 4 (rounded up to nearest 100)")
                             BulletPoint(text: "If dealer wins by ron: winner gets base × 6 (rounded up to nearest 100)")
@@ -1672,14 +1815,51 @@ struct ContentView: View {
     }
     
     func scoreTsumo() {
+        basePoints = calculateBasePoints()
         
-        let basePoints = calculateBasePoints()
-        
-        var winnerPoints = 0
-        var dealerPayment = 0
-        var nonDealerPayment = 0
+        winnerPoints = 0
+        dealerPayment = 0
+        nonDealerPayment = 0
         
         tsumo = false
+        wasTsumo = true
+        
+        if winner == "東" {
+            // dealer doesn't pay
+            // everyone pays base points * 2
+            nonDealerPayment = Int(ceil(Double(basePoints * 2) / 100.0) * 100.0)
+            if nonDealerPayment < 400 {
+                nonDealerPayment = 400
+            }
+            nonDealerPayment += 100 * honbaCount
+            winnerPoints = (threePlayerMode ? (nonDealerPayment * 2) : (nonDealerPayment * 3))
+        } else {
+            dealerPayment = Int(ceil(Double(basePoints * 2) / 100.0) * 100.0)
+            if dealerPayment < 400 {
+                dealerPayment = 400
+            }
+            dealerPayment += 100 * honbaCount
+            nonDealerPayment = Int(ceil(Double(basePoints * 1) / 100.0) * 100.0)
+            if nonDealerPayment < 200 {
+                nonDealerPayment = 200
+            }
+            nonDealerPayment += 100 * honbaCount
+            winnerPoints = threePlayerMode ? (dealerPayment + nonDealerPayment) : (dealerPayment + nonDealerPayment * 2)
+        }
+        print("tsumo winnerPoints = \(winnerPoints)")
+        print("nonDealerPayment = \(nonDealerPayment)")
+        print("dealerPayment = \(dealerPayment)")
+        
+        
+        if !displayScoring {
+            handleTsumoScoring()
+        } else {
+            scoringScreen = true
+        }
+    }
+    
+    func handleTsumoScoring() {
+        scoringScreen = false
         
         downScoreChange = true
         upScoreChange = true
@@ -1687,29 +1867,11 @@ struct ContentView: View {
             leftScoreChange = true
         }
         rightScoreChange = true
-        
         if winner == "東" {
-            // dealer doesn't pay
-            // everyone pays base points * 2
-            nonDealerPayment = Int(ceil(Double(basePoints * 2) / 100.0) * 100.0)
-            if nonDealerPayment < 400 { nonDealerPayment = 400 }
-            nonDealerPayment += 100 * honbaCount
-            winnerPoints = (threePlayerMode ? (nonDealerPayment * 2) : (nonDealerPayment * 3))
             honbaCount += 1
         } else {
-            dealerPayment = Int(ceil(Double(basePoints * 2) / 100.0) * 100.0)
-            if dealerPayment < 400 { dealerPayment = 400 }
-            dealerPayment += 100 * honbaCount
-            nonDealerPayment = Int(ceil(Double(basePoints * 1) / 100.0) * 100.0)
-            if nonDealerPayment < 200 { nonDealerPayment = 200 }
-            nonDealerPayment += 100 * honbaCount
-            winnerPoints = threePlayerMode ? (dealerPayment + nonDealerPayment) : (dealerPayment + nonDealerPayment * 2)
             honbaCount = 0
         }
-        print("tsumo winnerPoints = \(winnerPoints)")
-        print("nonDealerPayment = \(nonDealerPayment)")
-        print("dealerPayment = \(dealerPayment)")
-        
         for i in playerList.indices {
             //handle winner
             if playerList[i].winner {
@@ -1743,22 +1905,23 @@ struct ContentView: View {
             }
             playerList[i].riichi = false
             playerList[i].tenpai = false
-            riichiPot = 0
-            riichiPotIndicator = 0
-            han = 1
-            fu = 20
-            addingFu = 20
         }
+        wasTsumo = false
+        riichiPot = 0
+        riichiPotIndicator = 0
+        han = 1
+        fu = 20
+        addingFu = 20
     }
     
     func scoreRon() {
         
-        let basePoints = calculateBasePoints()
+        basePoints = calculateBasePoints()
         
         // Determine multiplier based on dealer status
-        let multiplier = (winner == "東") ? 6 : 4
+        multiplier = (winner == "東") ? 6 : 4
         print("winner = \(winner), multiplier = \(multiplier)")
-        var winnerPoints = Int(ceil(Double(basePoints * multiplier) / 100.0) * 100.0)
+        winnerPoints = Int(ceil(Double(basePoints * multiplier) / 100.0) * 100.0)
         print("winnerPoints = \(winnerPoints)")
         
         // Apply minimum Ron points
@@ -1770,11 +1933,18 @@ struct ContentView: View {
             if winnerPoints < 1000 { winnerPoints = 1000 }
         }
         winnerPoints += 300 * honbaCount
-        if winner == "東" {
-            honbaCount += 1
+        print("winnerPoints = \(winnerPoints)")
+        ron = false
+        wasRon = true
+        if !displayScoring {
+            handleRonScoring()
         } else {
-            honbaCount = 0
+            scoringScreen = true
         }
+    }
+    
+    func handleRonScoring() {
+        scoringScreen = false
         
         // Update winner
         for i in playerList.indices {
@@ -1818,25 +1988,39 @@ struct ContentView: View {
                 }
             }
         }
+        if winner == "東" {
+            honbaCount += 1
+        } else {
+            honbaCount = 0
+        }
         riichiPot = 0
         riichiPotIndicator = 0
         han = 1
         fu = 20
         addingFu = 20
-        ron = false
+        wasRon = false
     }
     
     func calculateBasePoints() -> Int {
+        print("calculating base points")
         if !calculateFu {
             fu = tsumo ? 30 : 20
         }
         if fu > 20 && fu < 30 && fu != 25 {
             fu = 30
         }
+        print("tsumo: \(tsumo), fu: \(fu)")
+        if tsumo && fu < 30 && fu != 25 {
+            fu = 30
+        }
         print("fu = \(fu)")
         
-        var basePoints = fu * Int(pow(2.0, Double(2 + han)))
-        print("\nbasePoints = \(basePoints)")
+        basePoints = fu * Int(pow(2.0, Double(2 + han)))
+        print("basePoints = \(basePoints)")
+        if basePoints > 2000 {
+            basePoints = 2000
+            print("mangan cap, basePoints = \(basePoints)")
+        }
         
         if han >= 5 {
             switch han {
@@ -1977,6 +2161,13 @@ struct ContentView: View {
         decimalSeconds = 10
         maxTime = 24.0
         playerTimer.upstream.connect().cancel()
+        displayScoring = false
+        honbaCount = 0
+        extraRounds = false
+        showTopKanji = false
+        showBottomKanji = false
+        showLeftKanji = false
+        showRightKanji = false
     }
     
     func rotateWinds() {
@@ -2126,8 +2317,72 @@ struct ShowFuButton: View {
                             }
                         }
                 )
+                .sensoryFeedback(.success, trigger: calculateFu)
             }
             Spacer()
         }
     }
 }
+
+struct Yaku: Identifiable {
+    let id = UUID()
+    let han: String
+    let entries: [String]
+}
+
+let yakuList: [Yaku] = [
+    Yaku(han: "1 Han (Closed)", entries: [
+        "門前自摸 (めんぜんつも) (Tsumo, Fully Concealed Hand) - self draw",
+        "立直 (リーチ) (Riichi) - no pon or chii",
+        "一発 (イッパツ) (Ippatsu) - win within first rotation after riichi, also can't be interrupted by tile calls",
+        "平和 (ピンフ) (Pinfu) - all sequences and must end with a two-sided wait",
+        "一盃口 (イーペイコー) (Pure Double Sequence) - 112233 kind of double sequence"
+    ]),
+    Yaku(han: "1 Han", entries: [
+        "海底撈月 (ハイテイラオユエ) (Under the Sea) - Tsumo with the last drawn tile from the wall",
+        "河底撈魚 (ホウテイラオユイ) (Under the River) - Ron with the last discarded tile",
+        "嶺上開花 (リンシャンカイホウ) (After a Kan) - win with a tile drawn from the dead wall immediately after calling a Kan",
+        "搶槓 (チャンカン) (Robbing a Kan) - calling Ron on another player's Kan (when you have a Tenpai for Thirteen Orphans, you can call on a Closed Kan)",
+        "断幺九 (タンヤオ) (All Simples) - winning with no honor or terminal tiles (2-8 number tiles only)",
+        "役牌 (やくはい) - a hand with at least one group of dragon, round wind, or seat wind tiles"
+    ]),
+    Yaku(han: "2 Han", entries: [
+        "両立直 (ダブリー) (Double Riichi) - declare Riichi with your starting hand before any tiles are called",
+        "全帯幺九 (チャンタ) (Half Outside Hand) - every sequence, triplet and pair contains at least one terminal tile or honor tiles (-1 Han if open)",
+        "三色同順 (サンショクドウジュン) (Mixed Triple Sequence) - three sequences with the same numbers across the three suits (-1 Han if open)",
+        "一気通貫 (イッキツウカン) (Pure Straight) - complete sequence 1–9 (-1 Han if open)",
+        "対々 (トイトイ) (All Triplets) - all triplets (or quads), no sequences",
+        "三暗刻 (サンアンコウ) (Three Concealed Triplets) - three sets of triplets (or quads) that were formed without calling any tiles",
+        "三色同刻 (サンショクドウコウ) (Triple Triplets) - three triplets with the same number in each suit",
+        "三槓子 (サンカンツ) (Three Kans) - three Kans, may be open",
+        "七対子 (チートイツ) (Seven Pairs) - seven pairs, closed only",
+        "混老頭 (ホンロウトウ) (All Terminals and Honors) - nothing but terminals and honors (usually scored with Seven Pairs or All Triplets)",
+        "小三元 (ショウサンゲン) (Little Three Dragons) - two triplets of dragon tiles plus a pair of the third"
+    ]),
+    Yaku(han: "3 Han", entries: [
+        "混一色 (ホンイーソー) (Half Flush) - single suit with honor tiles (-1 Han if open)",
+        "純全帯么 (ジュンチャン) (Fully Outside Hand) - all sets contain at least one terminal tile (-1 Han if open)",
+        "二盃口 (リャンペイコー) (Twice Pure Double Sequence) - two sets of Pure Double Sequence in two different suits (doesn't combine with Seven Pairs, closed only)"
+    ]),
+    Yaku(han: "6 Han", entries: [
+        "清一色 (チンイーソー) (Full Flush) - one suit of number tiles (-1 Han if open)"
+    ]),
+    Yaku(han: "Mangan", entries: [
+        "流し満貫 (ナガシマンガン) (Mangan at Draw) - all your discards were terminals/honors and no one called them (5 Han)"
+    ]),
+    Yaku(han: "Yakuman", entries: [
+        "数え役満 (かぞえやくまん) - if your hand adds up to 13+ Han",
+        "国士無双 (コクシムソウ) (Thirteen Orphans) - 1 & 9 of each suit, all winds, all dragons, plus one extra of any",
+        "四暗刻 (スーアンコウ) (Four Concealed Triplets) - four closed triplets (closed only, you can only call the last tile for the pair)",
+        "大三元 (ダイサンゲン) (Big Three Dragons) - three triplets of all three dragons",
+        "小四喜 (ショウスーシー) (Little Four Winds) - three triplets/quads of winds plus a pair of the fourth",
+        "大四喜 (ダイスーシー) (Big Four Winds) - four triplets/quads of all four winds",
+        "字一色 (ツーイーソー) (All Honors) - nothing but honor tiles",
+        "清老頭 (チンロウトウ) (All Terminals) - nothing but terminal tiles",
+        "緑一色 (リューイーソー) (All Green) - only green tiles (23468 bamboo + green dragon)",
+        "九連宝燈 (チューレンポートウ) (Nine Gates) - 1112345678999 + any one extra in the same suit (closed only)",
+        "四槓子 (スーカンツ) (Four Quads) - four Kans, open or closed",
+        "天和 (テンホー) (Blessing of Heaven) - dealer tsumo on the very first draw",
+        "地和 (チーホー) (Blessing of Earth) - non-dealer tsumo on first draw before any calls"
+    ])
+]
