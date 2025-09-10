@@ -15,6 +15,10 @@
 		441D8ED22AAC8DFF00F5FE53 /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441D8ED12AAC8DFF00F5FE53 /* Player.swift */; };
 		441D8ED42AACD0CC00F5FE53 /* TenpaiButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441D8ED32AACD0CC00F5FE53 /* TenpaiButton.swift */; };
 		441D8ED62AACE06500F5FE53 /* RiichiButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441D8ED52AACE06500F5FE53 /* RiichiButton.swift */; };
+		44A288472E6FB54A008C2AFA /* Yaku.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A288462E6FB54A008C2AFA /* Yaku.swift */; };
+		44A288492E6FB5AF008C2AFA /* ShowFuButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A288482E6FB5AF008C2AFA /* ShowFuButton.swift */; };
+		44A2884B2E6FB673008C2AFA /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A2884A2E6FB673008C2AFA /* AudioManager.swift */; };
+		44A2884D2E6FBC4E008C2AFA /* ScoreChangeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A2884C2E6FBC4E008C2AFA /* ScoreChangeView.swift */; };
 		44E566522D8A97DE001A2A5E /* act_rich.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 44E566512D8A97DE001A2A5E /* act_rich.mp3 */; };
 /* End PBXBuildFile section */
 
@@ -28,6 +32,10 @@
 		441D8ED12AAC8DFF00F5FE53 /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
 		441D8ED32AACD0CC00F5FE53 /* TenpaiButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TenpaiButton.swift; sourceTree = "<group>"; };
 		441D8ED52AACE06500F5FE53 /* RiichiButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiichiButton.swift; sourceTree = "<group>"; };
+		44A288462E6FB54A008C2AFA /* Yaku.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Yaku.swift; sourceTree = "<group>"; };
+		44A288482E6FB5AF008C2AFA /* ShowFuButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowFuButton.swift; sourceTree = "<group>"; };
+		44A2884A2E6FB673008C2AFA /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
+		44A2884C2E6FBC4E008C2AFA /* ScoreChangeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreChangeView.swift; sourceTree = "<group>"; };
 		44E566512D8A97DE001A2A5E /* act_rich.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = act_rich.mp3; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -63,6 +71,10 @@
 			children = (
 				441D8EBF2AAB728E00F5FE53 /* Mahjong_ScoreboardApp.swift */,
 				441D8EC12AAB728E00F5FE53 /* ContentView.swift */,
+				44A2884C2E6FBC4E008C2AFA /* ScoreChangeView.swift */,
+				44A2884A2E6FB673008C2AFA /* AudioManager.swift */,
+				44A288482E6FB5AF008C2AFA /* ShowFuButton.swift */,
+				44A288462E6FB54A008C2AFA /* Yaku.swift */,
 				440522952E5C803200305437 /* ScoringDisplay.swift */,
 				441D8ED52AACE06500F5FE53 /* RiichiButton.swift */,
 				441D8ED32AACD0CC00F5FE53 /* TenpaiButton.swift */,
@@ -154,9 +166,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				441D8ED22AAC8DFF00F5FE53 /* Player.swift in Sources */,
+				44A2884D2E6FBC4E008C2AFA /* ScoreChangeView.swift in Sources */,
 				441D8ED62AACE06500F5FE53 /* RiichiButton.swift in Sources */,
+				44A288472E6FB54A008C2AFA /* Yaku.swift in Sources */,
 				441D8EC22AAB728E00F5FE53 /* ContentView.swift in Sources */,
 				441D8ED42AACD0CC00F5FE53 /* TenpaiButton.swift in Sources */,
+				44A288492E6FB5AF008C2AFA /* ShowFuButton.swift in Sources */,
+				44A2884B2E6FB673008C2AFA /* AudioManager.swift in Sources */,
 				440522962E5C803200305437 /* ScoringDisplay.swift in Sources */,
 				441D8EC02AAB728E00F5FE53 /* Mahjong_ScoreboardApp.swift in Sources */,
 			);

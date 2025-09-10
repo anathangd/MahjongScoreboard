@@ -7,14 +7,15 @@
 
 import SwiftUI
 import AVFoundation
+import Combine
 
 struct ContentView: View {
      //player1 is in charge of the scoreboard
     @StateObject var audioManager = AudioManager()
-    @State var timerDown = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    @State var timerUp = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    @State var timerLeft = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    @State var timerRight = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    @State var timerUp: Publishers.Autoconnect<Timer.TimerPublisher>?
+    @State var timerDown: Publishers.Autoconnect<Timer.TimerPublisher>?
+    @State var timerLeft: Publishers.Autoconnect<Timer.TimerPublisher>?
+    @State var timerRight: Publishers.Autoconnect<Timer.TimerPublisher>?
     var sleepDelay = 1.5
     
     @State var enterPlayer1 = ""
@@ -106,7 +107,7 @@ struct ContentView: View {
     @State var addingFu = 20
     @State var riichiPotIndicator = 0
     @State var honbaCount = 0
-    @State var displayScoring = false
+    @State var displayScoring = true
     @State var scoringScreen = false
     
     @State var basePoints = 0
@@ -124,6 +125,18 @@ struct ContentView: View {
     @State private var showRightKanji = false
     @State private var showTopKanji = false
     @State private var showBottomKanji = false
+    
+    @State private var multipleRon = false
+    @State private var selectedLoser: String? = nil
+    
+    let isPreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
+    
+    var canSubmitMultipleRon: Bool {
+        let winnerCount = playerList.filter { $0.multRonWin }.count
+        let invalidCombo = playerList.contains { $0.multRonWin && $0.wind == selectedLoser }
+        let validLoserSelected = ["東", "南", "西", "北"].contains(selectedLoser)
+        return winnerCount >= 2 && !invalidCombo && validLoserSelected
+    }
     
     var body: some View {
         ZStack {
@@ -230,6 +243,7 @@ struct ContentView: View {
                     .rotationEffect(Angle(degrees: -90))
                     .offset(x: 195)
             }
+            
             //top and bottom players
             VStack {
                 //top player
@@ -263,6 +277,9 @@ struct ContentView: View {
                             playerList[0].loser = true
                             playerList[1].loser = true
                             playerList[3].loser = true
+                        }
+                        Button("Multiple Ron") {
+                            multipleRon = true
                         }
                     } label: {
                         Text(playerList[2].wind).rotationEffect(Angle(degrees: 180))
@@ -310,6 +327,9 @@ struct ContentView: View {
                         }
                     }
                 Menu {
+                    Button("Multiple Ron") {
+                        multipleRon = true
+                    }
                     Button("Tsumo") {
                         tsumo = true
                         playerList[0].winner = true
@@ -368,6 +388,9 @@ struct ContentView: View {
                             playerList[1].loser = true
                             playerList[2].loser = true
                         }
+                        Button("Multiple Ron") {
+                            multipleRon = true
+                        }
                     } label: {
                         Text(playerList[3].wind)
                     }
@@ -391,6 +414,9 @@ struct ContentView: View {
                 Spacer()
                 LazyHStack {
                     Menu {
+                        Button("Multiple Ron") {
+                            multipleRon = true
+                        }
                         Button("Tsumo") {
                             tsumo = true
                             playerList[1].winner = true
@@ -509,312 +535,127 @@ struct ContentView: View {
             
             //score change
             ZStack {
+                // Top player
                 VStack {
                     if upScoreChange {
                         if playerList[2].winner {
-                            Text("+" + String(upWinningPoints))
-                                .frame(width: 80, height: 20)
-                                .rotationEffect(.degrees(180))
-                                .padding(.init(top: -10, leading: -20, bottom: 0, trailing: 0))
-                                .onAppear {
-                                    timerUp = Timer.publish(every: 0.001, on: .main, in: .common).autoconnect()
-                                }
-                                .onReceive(timerUp, perform: { _ in
-                                    if upWinnerPointsUnchanged == true {
-                                        sleep(UInt32(sleepDelay))
-                                        upWinnerPointsUnchanged = false
-                                    }
-                                    upWinningPoints -= 10
-                                    playerList[2].score += 10
-                                    if upWinningPoints == 0 {
-                                        timerUp.upstream.connect().cancel()
-                                        upScoreChange = false
-                                        upWinnerPointsUnchanged = true
-                                        playerList[2].winner = false
-                                        winner = ""
-                                    }
-                                })
+                            ScoreChangeView(
+                                player: $playerList[2],
+                                scoreChange: $upWinningPoints,
+                                playerScoreChange: $upScoreChange,
+                                isWinner: $playerList[2].winner,
+                                isLoser: $playerList[2].loser,
+                                sleepDelay: sleepDelay
+                            )
+                            .padding(.bottom, -10)
+                            .rotationEffect(.degrees(180))
                         }
-                        //lost by ron
-                        if playerList[2].wind == loser {
-                            Text("-" + String(upLosingPoints))
-                                .frame(width: 80, height: 20)
-                                .rotationEffect(.degrees(180))
-                                .padding(.init(top: -10, leading: -20, bottom: 0, trailing: 0))
-                                .onAppear {
-                                    timerUp = Timer.publish(every: 0.001, on: .main, in: .common).autoconnect()
-                                }
-                                .onReceive(timerUp, perform: { _ in
-                                    if upLosingPointsUnchanged == true {
-                                        sleep(UInt32(sleepDelay))
-                                        upLosingPointsUnchanged = false
-                                    }
-                                    upLosingPoints -= 10
-                                    playerList[2].score -= 10
-                                    if upLosingPoints == 0 || upLosingPoints < 0 {
-                                        timerUp.upstream.connect().cancel()
-                                        upScoreChange = false
-                                        loser = ""
-                                    }
-                                })
-
-                        }
-                        //in the case of losing to tsumo
-                        if playerList[2].loser {
-                            Text("-" + String(upLosingPoints))
-                                .frame(width: 80, height: 20)
-                                .rotationEffect(.degrees(180))
-                                .padding(.init(top: -10, leading: -20, bottom: 0, trailing: 0))
-                                .onAppear {
-                                    timerUp = Timer.publish(every: 0.001, on: .main, in: .common).autoconnect()
-                                }
-                                .onReceive(timerUp, perform: { _ in
-                                    if upLosingPointsUnchanged == true {
-                                        sleep(UInt32(sleepDelay))
-                                        upLosingPointsUnchanged = false
-                                    }
-                                    upLosingPoints -= 10
-                                    playerList[2].score -= 10
-                                    if upLosingPoints == 0 {
-                                        timerUp.upstream.connect().cancel()
-                                        upScoreChange = false
-                                        playerList[2].loser = false
-                                    }
-                                })
+                        if playerList[2].loser || playerList[2].wind == loser {
+                            ScoreChangeView(
+                                player: $playerList[2],
+                                scoreChange: $upLosingPoints,
+                                playerScoreChange: $upScoreChange,
+                                isWinner: $playerList[2].winner,
+                                isLoser: $playerList[2].loser,
+                                sleepDelay: sleepDelay
+                            )
+                            .padding(.bottom, -10)
+                            .rotationEffect(.degrees(180))
                         }
                     }
                     Spacer()
-                }   //top player
-                
+                }
+
+                // Bottom player
                 VStack {
                     Spacer()
                     if downScoreChange {
-                        //winner by ron
                         if playerList[0].winner {
-                            Text("+" + String(downWinningPoints))
-                                .frame(width: 80, height: 20)
-                                .padding(.init(top: 0, leading: 20, bottom: -10, trailing: 0))
-                                .onAppear {
-                                    timerDown = Timer.publish(every: 0.001, on: .main, in: .common).autoconnect()
-                                }
-                                .onReceive(timerDown, perform: { _ in
-                                    if downWinnerPointsUnchanged == true {
-                                        sleep(UInt32(sleepDelay))
-                                        downWinnerPointsUnchanged = false
-                                    }
-                                    playerList[0].score += 10
-                                    downWinningPoints -= 10
-                                    if downWinningPoints == 0 || downWinningPoints < 0 {
-                                        timerDown.upstream.connect().cancel()
-                                        downScoreChange = false
-                                        downWinnerPointsUnchanged = true
-                                        playerList[0].winner = false
-                                        winner = ""
-                                    }
-                                })
+                            ScoreChangeView(
+                                player: $playerList[0],
+                                scoreChange: $downWinningPoints,
+                                playerScoreChange: $downScoreChange,
+                                isWinner: $playerList[0].winner,
+                                isLoser: $playerList[0].loser,
+                                sleepDelay: sleepDelay
+                            )
+                            .padding(.bottom, -10)
                         }
-                        //lost by ron
-                        if playerList[0].wind == loser {
-                            Text("-" + String(downLosingPoints))
-                                .frame(width: 80, height: 20)
-                                .padding(.init(top: 0, leading: 20, bottom: -10, trailing: 0))
-                                .onAppear {
-                                    timerDown = Timer.publish(every: 0.001, on: .main, in: .common).autoconnect()
-                                }
-                                .onReceive(timerDown, perform: { _ in
-                                    if downLosingPointsUnchanged == true {
-                                        sleep(UInt32(sleepDelay))
-                                        downLosingPointsUnchanged = false
-                                    }
-                                    downLosingPoints -= 10
-                                    playerList[0].score -= 10
-                                    if downLosingPoints == 0 || downLosingPoints < 0 {
-                                        timerDown.upstream.connect().cancel()
-                                        downScoreChange = false
-                                        loser = ""
-                                    }
-                                })
-
-                        }
-                        //in the case of losing to tsumo
-                        if playerList[0].loser {
-                            Text("-" + String(downLosingPoints))
-                                .frame(width: 80, height: 20)
-                                .padding(.init(top: 0, leading: 20, bottom: -10, trailing: 0))
-                                .onAppear {
-                                    timerDown = Timer.publish(every: 0.001, on: .main, in: .common).autoconnect()
-                                }
-                                .onReceive(timerDown, perform: { _ in
-                                    if downWinnerPointsUnchanged == true {
-                                        sleep(UInt32(sleepDelay))
-                                        downWinnerPointsUnchanged = false
-                                    }
-                                    downLosingPoints -= 10
-                                    playerList[0].score -= 10
-                                    if downLosingPoints == 0 || downLosingPoints < 0 {
-                                        timerDown.upstream.connect().cancel()
-                                        downScoreChange = false
-                                        playerList[0].loser = false
-                                        downWinnerPointsUnchanged = true
-                                    }
-                                })
+                        if playerList[0].loser || playerList[0].wind == loser {
+                            ScoreChangeView(
+                                player: $playerList[0],
+                                scoreChange: $downLosingPoints,
+                                playerScoreChange: $downScoreChange,
+                                isWinner: $playerList[0].winner,
+                                isLoser: $playerList[0].loser,
+                                sleepDelay: sleepDelay
+                            )
+                            .padding(.bottom, -10)
                         }
                     }
-                }   //bottom player
-                
+                }
+
+                // Left player
                 HStack {
                     if leftScoreChange {
                         if playerList[3].winner {
-                            Text("+" + String(leftWinningPoints))
-                                .frame(width: 80, height: 20)
-                                .rotationEffect(.degrees(90))
-                                .padding(.init(top: 80, leading: 15, bottom: 0, trailing: 0))
-                                .onAppear {
-                                    timerLeft = Timer.publish(every: 0.001, on: .main, in: .common).autoconnect()
-                                }
-                                .onReceive(timerLeft, perform: { _ in
-                                    if leftWinnerPointsUnchanged == true {
-                                        sleep(UInt32(sleepDelay))
-                                        leftWinnerPointsUnchanged = false
-                                    }
-                                    leftWinningPoints -= 10
-                                    playerList[3].score += 10
-                                    if leftWinningPoints == 0 || leftWinningPoints < 0 {
-                                        timerLeft.upstream.connect().cancel()
-                                        leftScoreChange = false
-                                        leftWinnerPointsUnchanged = true
-                                        playerList[3].winner = false
-                                        winner = ""
-                                    }
-                                })
+                            ScoreChangeView(
+                                player: $playerList[3],
+                                scoreChange: $leftWinningPoints,
+                                playerScoreChange: $leftScoreChange,
+                                isWinner: $playerList[3].winner,
+                                isLoser: $playerList[3].loser,
+                                sleepDelay: sleepDelay
+                            )
+                            .offset(y: 25)
+                            .rotationEffect(.degrees(90))
                         }
-                        //lost by ron
-                        if playerList[3].wind == loser {
-                            Text("-" + String(leftLosingPoints))
-                                .frame(width: 80, height: 20)
-                                .rotationEffect(.degrees(90))
-                                .padding(.init(top: 80, leading: 15, bottom: 0, trailing: 0))
-                                .onAppear {
-                                    timerLeft = Timer.publish(every: 0.001, on: .main, in: .common).autoconnect()
-                                }
-                                .onReceive(timerLeft, perform: { _ in
-                                    if leftLosingPointsUnchanged == true {
-                                        sleep(UInt32(sleepDelay))
-                                        leftLosingPointsUnchanged = false
-                                    }
-                                    leftLosingPoints -= 10
-                                    playerList[3].score -= 10
-                                    if leftLosingPoints == 0 || leftLosingPoints < 0 {
-                                        timerLeft.upstream.connect().cancel()
-                                        leftScoreChange = false
-                                        loser = ""
-                                    }
-                                })
-
-                        }
-                        //in the case of losing to tsumo
-                        if playerList[3].loser {
-                            Text("-" + String(leftLosingPoints))
-                                .frame(width: 80, height: 20)
-                                .rotationEffect(.degrees(90))
-                                .padding(.init(top: 80, leading: 15, bottom: 0, trailing: 0))
-                                .onAppear {
-                                    timerLeft = Timer.publish(every: 0.001, on: .main, in: .common).autoconnect()
-                                }
-                                .onReceive(timerLeft, perform: { _ in
-                                    if leftLosingPointsUnchanged == true {
-                                        sleep(UInt32(sleepDelay))
-                                        leftLosingPointsUnchanged = false
-                                    }
-                                    leftLosingPoints -= 10
-                                    playerList[3].score -= 10
-                                    if leftLosingPoints == 0 || leftLosingPoints < 0 {
-                                        timerLeft.upstream.connect().cancel()
-                                        leftScoreChange = false
-                                        playerList[3].loser = false
-                                    }
-                                })
+                        if playerList[3].loser || playerList[3].wind == loser {
+                            ScoreChangeView(
+                                player: $playerList[3],
+                                scoreChange: $leftLosingPoints,
+                                playerScoreChange: $leftScoreChange,
+                                isWinner: $playerList[3].winner,
+                                isLoser: $playerList[3].loser,
+                                sleepDelay: sleepDelay
+                            )
+                            .offset(y: 25)
+                            .rotationEffect(.degrees(90))
                         }
                     }
                     Spacer()
-                }   //left player
-                
+                }
+
+                // Right player
                 HStack {
                     Spacer()
                     if rightScoreChange {
                         if playerList[1].winner {
-                            Text("+" + String(rightWinningPoints))
-                                .frame(width: 80, height: 20)
-                                .rotationEffect(.degrees(-90))
-                                .padding(.init(top: 0, leading: 0, bottom: 80, trailing: 15))
-                                .onAppear {
-                                    timerRight = Timer.publish(every: 0.001, on: .main, in: .common).autoconnect()
-                                }
-                                .onReceive(timerRight, perform: { _ in
-                                    if rightWinnerPointsUnchanged == true {
-                                        sleep(UInt32(sleepDelay))
-                                        rightWinnerPointsUnchanged = false
-                                    }
-                                    rightWinningPoints -= 10
-                                    playerList[1].score += 10
-                                    if rightWinningPoints == 0 || rightWinningPoints < 0 {
-                                        timerRight.upstream.connect().cancel()
-                                        rightScoreChange = false
-                                        rightWinnerPointsUnchanged = true
-                                        playerList[1].winner = false
-                                        winner = ""
-                                    }
-                                })
+                            ScoreChangeView(
+                                player: $playerList[1],
+                                scoreChange: $rightWinningPoints,
+                                playerScoreChange: $rightScoreChange,
+                                isWinner: $playerList[1].winner,
+                                isLoser: $playerList[1].loser,
+                                sleepDelay: sleepDelay
+                            )
+                            .offset(y: 25)
+                            .rotationEffect(.degrees(-90))
                         }
-                        //lost by ron
-                        if playerList[1].wind == loser {
-                            Text("-" + String(rightLosingPoints))
-                                .frame(width: 80, height: 20)
-                                .rotationEffect(.degrees(-90))
-                                .padding(.init(top: 0, leading: 0, bottom: 80, trailing: 15))
-                                .onAppear {
-                                    timerRight = Timer.publish(every: 0.001, on: .main, in: .common).autoconnect()
-                                }
-                                .onReceive(timerRight, perform: { _ in
-                                    if rightLosingPointsUnchanged == true {
-                                        sleep(UInt32(sleepDelay))
-                                        rightLosingPointsUnchanged = false
-                                    }
-                                    rightLosingPoints -= 10
-                                    playerList[1].score -= 10
-                                    if rightLosingPoints == 0 || rightLosingPoints < 0 {
-                                        timerRight.upstream.connect().cancel()
-                                        rightScoreChange = false
-                                        loser = ""
-                                    }
-                                })
-
-                        }
-                        //in the case of losing to tsumo
-                        if playerList[1].loser {
-                            Text("-" + String(rightLosingPoints))
-                                .frame(width: 80, height: 20)
-                                .rotationEffect(.degrees(-90))
-                                .padding(.init(top: 0, leading: 0, bottom: 80, trailing: 15))
-                                .onAppear {
-                                    timerRight = Timer.publish(every: 0.001, on: .main, in: .common).autoconnect()
-                                }
-                                .onReceive(timerRight, perform: { _ in
-                                    if rightLosingPointsUnchanged == true {
-                                        sleep(UInt32(sleepDelay))
-                                        rightLosingPointsUnchanged = false
-                                    }
-                                    rightLosingPoints -= 10
-                                    playerList[1].score -= 10
-                                    if rightLosingPoints == 0 || rightLosingPoints < 0 {
-                                        timerRight.upstream.connect().cancel()
-                                        rightScoreChange = false
-                                        playerList[1].loser = false
-                                    }
-                                })
+                        if playerList[1].loser || playerList[1].wind == loser {
+                            ScoreChangeView(
+                                player: $playerList[1],
+                                scoreChange: $rightLosingPoints,
+                                playerScoreChange: $rightScoreChange,
+                                isWinner: $playerList[1].winner,
+                                isLoser: $playerList[1].loser,
+                                sleepDelay: sleepDelay
+                            )
+                            .offset(y: 25)
+                            .rotationEffect(.degrees(-90))
                         }
                     }
-                }   //right player
+                }
             }
             
             // riichi pot and honba indicator
@@ -1035,7 +876,7 @@ struct ContentView: View {
                                     ForEach(1...13, id: \.self) {
                                         Text("\($0)")
                                     }
-                                    //Text("Double Yakuman")
+                                    Text("ダブル役満").tag(26)
                                 }
                                 .padding(.top, -20)
                                 .pickerStyle(.wheel)
@@ -1109,6 +950,7 @@ struct ContentView: View {
                                     ForEach(1...13, id: \.self) {
                                         Text("\($0)")
                                     }
+                                    Text("ダブル役満").tag(26)
                                 }
                                 .padding(.top, -20)
                                 .pickerStyle(.wheel)
@@ -1593,6 +1435,100 @@ struct ContentView: View {
                 .ignoresSafeArea()
             }
             
+            if multipleRon {
+                ZStack {
+                    Rectangle()
+                        .ignoresSafeArea()
+                        .opacity(0.6)
+                        .onTapGesture {
+                            multipleRon = false
+                        }
+                    VStack {
+                        VStack {
+                            Text("Winners:")
+                                .foregroundStyle(.white)
+                            if !threePlayerMode {
+                                ForEach(playerList.indices, id: \.self) { i in
+                                    HStack(spacing: 0) {
+                                        Button(playerList[i].wind) {
+                                            playerList[i].multRonWin.toggle()
+                                        }
+                                        .buttonStyle(RonWinnerButtonStyle(isSelected: $playerList[i].multRonWin))
+                                        if playerList[i].multRonWin {
+                                            HanFuPicker(han: $playerList[i].han, fu: $playerList[i].fu)
+                                        }
+                                    }
+                                }
+                            } else {
+                                ForEach(playerList.indices, id: \.self) { i in
+                                    if playerList[i].wind != "北" {
+                                        HStack(spacing: 0) {
+                                            Button(playerList[i].wind) {
+                                                playerList[i].multRonWin.toggle()
+                                            }
+                                            .buttonStyle(RonWinnerButtonStyle(isSelected: $playerList[i].multRonWin))
+                                            if playerList[i].multRonWin {
+                                                HanFuPicker(han: $playerList[i].han, fu: $playerList[i].fu)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            Text("Loser:")
+                                .foregroundStyle(.white)
+                        }
+                        .font(.system(size: 50))
+                        // losers
+                        if !threePlayerMode {
+                            HStack(spacing: 0) {
+                                ForEach(playerList.indices, id: \.self) { i in
+                                    Button(playerList[i].wind) {
+                                        for j in playerList.indices {
+                                            playerList[j].loser = false
+                                        }
+                                        playerList[i].loser = true
+                                        selectedLoser = playerList[i].wind
+                                    }
+                                    .buttonStyle(RonLoserButtonStyle(isSelected: .constant(selectedLoser == playerList[i].wind)))
+                                }
+                            }
+                            .font(.title)
+                        } else {
+                            HStack {
+                                ForEach(playerList.indices, id: \.self) { i in
+                                    if playerList[i].wind != "北" {
+                                        Button(playerList[i].wind) {
+                                            for j in playerList.indices {
+                                                playerList[j].loser = false
+                                            }
+                                            playerList[i].loser = true
+                                            selectedLoser = playerList[i].wind
+                                        }
+                                        .buttonStyle(RonLoserButtonStyle(isSelected: .constant(selectedLoser == playerList[i].wind)))
+                                    }
+                                }
+                            }
+                            .font(.title)
+                        }
+                    }
+                    .padding(.top, -20)
+                    VStack {
+                        Spacer()
+                        Button("submit") {
+                            multipleRon = false
+                            handleMultipleRon()
+                        }
+                        .disabled(!canSubmitMultipleRon)
+                        .font(.system(size: 30))
+                        .foregroundStyle(.white)
+                        .frame(width: 130, height: 60)
+                        .background(canSubmitMultipleRon ? .blue : .gray)
+                        .clipShape(RoundedRectangle(cornerRadius: 15))
+                        .padding()
+                    }
+                }
+            }
+            
             if displayResultsScreen {
                 ZStack {
                     Rectangle()
@@ -1636,7 +1572,9 @@ struct ContentView: View {
                                     .padding(.bottom)
 
                                 ForEach(yaku.entries, id: \.self) { entry in
-                                    Text(entry)
+                                    Text(.init(entry))
+                                        .padding(.top, 5)
+                                        .padding(.bottom, 5)
                                     Divider()
                                 }
                             }
@@ -1717,14 +1655,18 @@ struct ContentView: View {
                 }
             }
             
-        }.onAppear(perform: {
-            restart()
-            timerDown.upstream.connect().cancel()
-            timerUp.upstream.connect().cancel()
-            timerLeft.upstream.connect().cancel()
-            timerRight.upstream.connect().cancel()
-            playerTimer.upstream.connect().cancel()
-        })
+        }
+        .onAppear {
+            let isPreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
+
+            if !isPreview {
+                timerDown = Timer.publish(every: 0.001, on: .main, in: .common).autoconnect()
+                timerUp = Timer.publish(every: 0.001, on: .main, in: .common).autoconnect()
+                timerLeft = Timer.publish(every: 0.001, on: .main, in: .common).autoconnect()
+                timerRight = Timer.publish(every: 0.001, on: .main, in: .common).autoconnect()
+                playerTimer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
+            }
+        }
     }
     
     func rollDice() {
@@ -1815,50 +1757,116 @@ struct ContentView: View {
     }
     
     func scoreTsumo() {
-        basePoints = calculateBasePoints()
-        
-        winnerPoints = 0
-        dealerPayment = 0
-        nonDealerPayment = 0
-        
-        tsumo = false
-        wasTsumo = true
-        
-        if winner == "東" {
-            // dealer doesn't pay
-            // everyone pays base points * 2
-            nonDealerPayment = Int(ceil(Double(basePoints * 2) / 100.0) * 100.0)
-            if nonDealerPayment < 400 {
-                nonDealerPayment = 400
+        // Check for Double Yakuman
+        if han == 26 { // your tag for ダブル役満
+            let singleYakumanPoints = 32000 // adjust as needed
+            winnerPoints = singleYakumanPoints * 2
+
+            if winner == "東" { // dealer
+                winnerPoints = Int(Double(winnerPoints) * 1.5)
+                nonDealerPayment = Int(ceil(Double(winnerPoints / 3) / 100.0) * 100.0)
+                downWinningPoints = winnerPoints
+                upWinningPoints = winnerPoints
+                leftWinningPoints = winnerPoints
+                rightWinningPoints = winnerPoints
+            } else { // non-dealer
+                dealerPayment = winnerPoints / 2
+                nonDealerPayment = winnerPoints / 4
+                // assign to score changes for UI
+                switch winner {
+                case playerList[0].wind:
+                    downWinningPoints = winnerPoints
+                case playerList[1].wind:
+                    rightWinningPoints = winnerPoints
+                case playerList[2].wind:
+                    upWinningPoints = winnerPoints
+                case playerList[3].wind:
+                    leftWinningPoints = winnerPoints
+                default: break
+                }
             }
-            nonDealerPayment += 100 * honbaCount
-            winnerPoints = (threePlayerMode ? (nonDealerPayment * 2) : (nonDealerPayment * 3))
+
+            // set losers’ points
+            for i in playerList.indices {
+                if !playerList[i].winner {
+                    if playerList[i].wind == "東" {
+                        switch i {
+                        case 0: downLosingPoints = dealerPayment
+                        case 1: rightLosingPoints = dealerPayment
+                        case 2: upLosingPoints = dealerPayment
+                        case 3: leftLosingPoints = dealerPayment
+                        default: break
+                        }
+                    } else {
+                        switch i {
+                        case 0: downLosingPoints = nonDealerPayment
+                        case 1: rightLosingPoints = nonDealerPayment
+                        case 2: upLosingPoints = nonDealerPayment
+                        case 3: leftLosingPoints = nonDealerPayment
+                        default: break
+                        }
+                    }
+                }
+            }
+
+            tsumo = false
+            wasTsumo = true
+            if !displayScoring {
+                handleTsumoScoring()
+            } else {
+                scoringScreen = true
+            }
+            return
         } else {
-            dealerPayment = Int(ceil(Double(basePoints * 2) / 100.0) * 100.0)
-            if dealerPayment < 400 {
-                dealerPayment = 400
+            basePoints = calculateBasePoints(paraFu: fu, paraHan: han)
+            
+            winnerPoints = 0
+            dealerPayment = 0
+            nonDealerPayment = 0
+            
+            tsumo = false
+            wasTsumo = true
+            
+            if winner == "東" {
+                // dealer doesn't pay
+                // everyone pays base points * 2
+                nonDealerPayment = Int(ceil(Double(basePoints * 2) / 100.0) * 100.0)
+                if nonDealerPayment < 400 {
+                    nonDealerPayment = 400
+                }
+                nonDealerPayment += 100 * honbaCount
+                winnerPoints = (threePlayerMode ? (nonDealerPayment * 2) : (nonDealerPayment * 3))
+            } else {
+                dealerPayment = Int(ceil(Double(basePoints * 2) / 100.0) * 100.0)
+                if dealerPayment < 400 {
+                    dealerPayment = 400
+                }
+                dealerPayment += 100 * honbaCount
+                nonDealerPayment = Int(ceil(Double(basePoints * 1) / 100.0) * 100.0)
+                if nonDealerPayment < 200 {
+                    nonDealerPayment = 200
+                }
+                nonDealerPayment += 100 * honbaCount
+                winnerPoints = threePlayerMode ? (dealerPayment + nonDealerPayment) : (dealerPayment + nonDealerPayment * 2)
             }
-            dealerPayment += 100 * honbaCount
-            nonDealerPayment = Int(ceil(Double(basePoints * 1) / 100.0) * 100.0)
-            if nonDealerPayment < 200 {
-                nonDealerPayment = 200
+            print("tsumo winnerPoints = \(winnerPoints)")
+            print("nonDealerPayment = \(nonDealerPayment)")
+            print("dealerPayment = \(dealerPayment)")
+            
+            
+            if !displayScoring {
+                handleTsumoScoring()
+            } else {
+                scoringScreen = true
             }
-            nonDealerPayment += 100 * honbaCount
-            winnerPoints = threePlayerMode ? (dealerPayment + nonDealerPayment) : (dealerPayment + nonDealerPayment * 2)
-        }
-        print("tsumo winnerPoints = \(winnerPoints)")
-        print("nonDealerPayment = \(nonDealerPayment)")
-        print("dealerPayment = \(dealerPayment)")
-        
-        
-        if !displayScoring {
-            handleTsumoScoring()
-        } else {
-            scoringScreen = true
         }
     }
     
     func handleTsumoScoring() {
+        showLeftKanji = false
+        showRightKanji = false
+        showTopKanji = false
+        showBottomKanji = false
         scoringScreen = false
         
         downScoreChange = true
@@ -1915,22 +1923,31 @@ struct ContentView: View {
     }
     
     func scoreRon() {
-        
-        basePoints = calculateBasePoints()
-        
-        // Determine multiplier based on dealer status
-        multiplier = (winner == "東") ? 6 : 4
-        print("winner = \(winner), multiplier = \(multiplier)")
-        winnerPoints = Int(ceil(Double(basePoints * multiplier) / 100.0) * 100.0)
-        print("winnerPoints = \(winnerPoints)")
-        
-        // Apply minimum Ron points
-        if winner == "東" {
-            // Dealer minimum
-            if winnerPoints < 1200 { winnerPoints = 1200 }
+        // Check for Double Yakuman
+        if han == 26 { // your tag for ダブル役満
+            let singleYakumanPoints = 32000 // adjust as needed
+            winnerPoints = singleYakumanPoints * 2
+            
+            if winner == "東" { // dealer
+                winnerPoints = Int(Double(winnerPoints) * 1.5)
+            }
         } else {
-            // Non-dealer minimum
-            if winnerPoints < 1000 { winnerPoints = 1000 }
+            basePoints = calculateBasePoints(paraFu: fu, paraHan: han)
+            
+            // Determine multiplier based on dealer status
+            multiplier = (winner == "東") ? 6 : 4
+            print("winner = \(winner), multiplier = \(multiplier)")
+            winnerPoints = Int(ceil(Double(basePoints * multiplier) / 100.0) * 100.0)
+            print("winnerPoints = \(winnerPoints)")
+            
+            // Apply minimum Ron points
+            if winner == "東" {
+                // Dealer minimum
+                if winnerPoints < 1200 { winnerPoints = 1200 }
+            } else {
+                // Non-dealer minimum
+                if winnerPoints < 1000 { winnerPoints = 1000 }
+            }
         }
         winnerPoints += 300 * honbaCount
         print("winnerPoints = \(winnerPoints)")
@@ -1944,6 +1961,10 @@ struct ContentView: View {
     }
     
     func handleRonScoring() {
+        showLeftKanji = false
+        showRightKanji = false
+        showTopKanji = false
+        showBottomKanji = false
         scoringScreen = false
         
         // Update winner
@@ -2001,29 +2022,142 @@ struct ContentView: View {
         wasRon = false
     }
     
-    func calculateBasePoints() -> Int {
-        print("calculating base points")
-        if !calculateFu {
-            fu = tsumo ? 30 : 20
-        }
-        if fu > 20 && fu < 30 && fu != 25 {
-            fu = 30
-        }
-        print("tsumo: \(tsumo), fu: \(fu)")
-        if tsumo && fu < 30 && fu != 25 {
-            fu = 30
-        }
-        print("fu = \(fu)")
+    func handleMultipleRon() {
+        showLeftKanji = false
+        showRightKanji = false
+        showTopKanji = false
+        showBottomKanji = false
+        var winnerPointsArray: [Int] = Array(repeating: 0, count: 4)
+        var honbaCountWillIncrease = false
         
-        basePoints = fu * Int(pow(2.0, Double(2 + han)))
+        
+        // 1️⃣ Calculate points for each winner and mark them
+        for i in playerList.indices {
+            if playerList[i].multRonWin {
+                let han = playerList[i].han
+                let fu = playerList[i].fu
+                
+                var points: Int
+                if han == 26 { // Double Yakuman
+                    points = 32000 * 2
+                } else {
+                    let base = calculateBasePoints(paraFu: fu, paraHan: han)
+                    let multiplier = (playerList[i].wind == "東") ? 6 : 4
+                    points = Int(ceil(Double(base * multiplier) / 100.0) * 100.0)
+                }
+                if playerList[i].wind == "東" {
+                    honbaCountWillIncrease = true
+                }
+                if playerList[i].wind == "東" && points < 1200 {
+                    points = 1200
+                } else if playerList[i].wind != "東" && points < 1000 {
+                    points = 1000
+                }
+                
+                points += 300 * honbaCount // + share
+                winnerPointsArray[i] = points
+                playerList[i].winner = true
+                print("\(playerList[i].wind) gets \(points) points")
+            }
+        }
+        
+        // 2️⃣ Handle loser payment
+        if let loserIndex = playerList.firstIndex(where: { $0.wind == selectedLoser }) {
+            var totalLoss = 0
+            for i in playerList.indices where playerList[i].winner {
+                totalLoss += winnerPointsArray[i]
+            }
+            playerList[loserIndex].loser = true
+            switch loserIndex {
+            case 0: downLosingPoints = totalLoss
+            case 1: rightLosingPoints = totalLoss
+            case 2: upLosingPoints = totalLoss
+            case 3: leftLosingPoints = totalLoss
+            default: break
+            }
+        }
+        if riichiPot > 0 {
+            let winners = playerList.enumerated().filter { $0.element.multRonWin }
+            let winnerCount = winners.count
+            let rawShare = riichiPot / winnerCount
+            let share = (rawShare / 100) * 100
+            let remainder = riichiPot - (share * winnerCount)
+            
+            // Give base share to all winners
+            for (i, _) in winners {
+                winnerPointsArray[i] += share
+            }
+            print("Beginning points: \(winnerPointsArray)")
+            
+            // Handle remainder → goes to first winner clockwise from loser
+            if remainder > 0,
+               let loserIndex = playerList.firstIndex(where: { $0.wind == selectedLoser }) {
+                print("Remainder is: \(remainder)")
+                
+                let clockwiseOrder = (1...3).map { (loserIndex + $0) % playerList.count }
+                
+                if let firstWinnerIndex = clockwiseOrder.first(where: { playerList[$0].multRonWin }) {
+                    print("Remainder is going to \(playerList[firstWinnerIndex].wind)")
+                    winnerPointsArray[firstWinnerIndex] += remainder
+                }
+            }
+            print("Final points: \(winnerPointsArray)")
+            riichiPot = 0
+            riichiPotIndicator = 0
+        }
+        
+        // 3️⃣ Assign winner points to UI
+        for i in playerList.indices where playerList[i].winner {
+            switch i {
+            case 0: downWinningPoints = winnerPointsArray[i]
+            case 1: rightWinningPoints = winnerPointsArray[i]
+            case 2: upWinningPoints = winnerPointsArray[i]
+            case 3: leftWinningPoints = winnerPointsArray[i]
+            default: break
+            }
+        }
+        
+        // 4️⃣ Trigger score change UI
+        downScoreChange = playerList[0].winner || playerList[0].loser
+        rightScoreChange = playerList[1].winner || playerList[1].loser
+        upScoreChange = playerList[2].winner || playerList[2].loser
+        leftScoreChange = playerList[3].winner || playerList[3].loser
+        
+        // 5️⃣ Reset temporary selection flags
+        for i in playerList.indices {
+            playerList[i].riichi = false
+            playerList[i].tenpai = false
+            playerList[i].multRonWin = false
+            playerList[i].han = 1
+            playerList[i].fu = 20
+        }
+        
+        selectedLoser = ""
+        
+        // 6️⃣ Clear riichi pot and reset variables for next hand
+        if honbaCountWillIncrease {
+            honbaCount += 1
+        } else {
+            honbaCount = 0
+        }
+        riichiPot = 0
+        riichiPotIndicator = 0
+        han = 1
+        fu = 20
+        addingFu = 20
+    }
+    
+    func calculateBasePoints(paraFu: Int, paraHan: Int) -> Int {
+        print("calculating base points")
+        basePoints = paraFu * Int(pow(2.0, Double(2 + paraHan)))
         print("basePoints = \(basePoints)")
         if basePoints > 2000 {
             basePoints = 2000
             print("mangan cap, basePoints = \(basePoints)")
         }
         
-        if han >= 5 {
-            switch han {
+        if paraHan >= 5 {
+            switch paraHan {
             case 5: basePoints = 2000
             case 6...7: basePoints = 3000
             case 8...10: basePoints = 4000
@@ -2161,7 +2295,7 @@ struct ContentView: View {
         decimalSeconds = 10
         maxTime = 24.0
         playerTimer.upstream.connect().cancel()
-        displayScoring = false
+        displayScoring = true
         honbaCount = 0
         extraRounds = false
         showTopKanji = false
@@ -2202,187 +2336,90 @@ struct ContentView: View {
         displayResultsScreen = true
     }
         
-    }
-    struct ContentView_Previews: PreviewProvider {
-        static var previews: some View {
-            ContentView()
-        }
-    }
+}
 
-struct BulletPoint: View {
-    var text: String
+struct RonWinnerButtonStyle: ButtonStyle {
+    @Binding var isSelected: Bool
+    
+    init(isSelected: Binding<Bool>) {
+        self._isSelected = isSelected
+    }
+    
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(.white)
+            .frame(width: 100, height: 60)
+            .background(isSelected ? .blue : .gray)
+            .clipShape(RoundedRectangle(cornerRadius: 15))
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .padding(10)
+    }
+}
+
+struct RonLoserButtonStyle: ButtonStyle {
+    @Binding var isSelected: Bool
+    
+    init(isSelected: Binding<Bool>) {
+        self._isSelected = isSelected
+    }
+    
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(.white)
+            .frame(width: 50, height: 40)
+            .background(isSelected ? .blue : .gray)
+            .clipShape(RoundedRectangle(cornerRadius: 15))
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .padding(10)
+    }
+}
+
+#Preview {
+    ContentView()
+}
+
+struct HanFuPicker: View {
+    @Binding var han: Int
+    @Binding var fu: Int
     
     var body: some View {
-        HStack(alignment: .top, spacing: 8) {
-            Text("•")
-            Text(text)
-                .multilineTextAlignment(.leading)
-        }
-        .padding(5)
-    }
-}
-
-class AudioManager: ObservableObject {
-    var audioPlayer: AVAudioPlayer?
-
-    func playSound() {
-        // Configure AVAudioSession to allow background music to continue
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default, options: [])
-            try AVAudioSession.sharedInstance().setActive(true)
-        } catch {
-            print("Error setting up audio session: \(error)")
-        }
-
-        // Load and play the sound
-        guard let soundURL = Bundle.main.url(forResource: "act_rich", withExtension: "mp3") else {
-            print("Error: MP3 file not found")
-            return
-        }
-
-        do {
-            audioPlayer = try AVAudioPlayer(contentsOf: soundURL)
-            audioPlayer?.play()
-            print("Playing sound effect...")
-        } catch {
-            print("Error playing sound: \(error)")
-        }
-    }
-}
-
-struct FuIncrementButton: View {
-    @Binding var addingFu: Int   // bind to your state variable
-    let increment: Int           // how much this button adds
-
-    var body: some View {
-        Button {
-            if addingFu + increment <= 110 {
-                addingFu += increment
-            }
-        } label: {
-            Text("+\(increment)")
-                .font(.system(size: 18, weight: .bold))
-                .frame(width: 55)
-                .padding(.vertical, 6)
-                .background(Color.blue)
+        ZStack {
+            Rectangle()
                 .foregroundColor(.white)
-                .clipShape(Capsule())
-        }
-    }
-}
-
-struct ShowFuButton: View {
-    @Binding var showFu: Bool
-    @Binding var timerOn: Bool
-    @Binding var ron: Bool
-    @Binding var tsumo: Bool
-    @Binding var calculateFu: Bool
-    @Binding var han: Int
-    @State var justToggled = false
-    var body: some View {
-        VStack {
-            HStack {
-                Spacer()
-                Button {
-                    if !justToggled {
-                        showFu = true
-                    }
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill((ron || tsumo) ? Color.black : Color.clear)
-                            .contentShape(Circle())
-                            .frame(height: 40)
-                        Text("符")
-                            .font(.title2)
-                            .foregroundStyle(
-                                (!calculateFu || han >= 5)
-                                ? Color.gray
-                                : ((ron || tsumo) && calculateFu
-                                   ? Color.cyan
-                                   : Color.black)
-                            )
-                    }
-                }
-                .padding(.init(top: 0, leading: 0, bottom: -10, trailing: 30))
-                .disabled(timerOn ? true : false)
-                .simultaneousGesture(
-                    LongPressGesture(minimumDuration: 0.5)
-                        .onEnded { _ in
-                            calculateFu.toggle()
-                            justToggled = true
-                            // small delay so it doesn't open the fu screen
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                justToggled = false
-                            }
+                .frame(width: 250, height: 120)
+                .cornerRadius(15)
+            HStack(spacing: 0) {
+                VStack {
+                    Text("Han:")
+                        .font(.title3)
+                    Picker("", selection: $han) {
+                        ForEach(1...13, id: \.self) {
+                            Text("\($0)")
                         }
-                )
-                .sensoryFeedback(.success, trigger: calculateFu)
+                        Text("ダブル役満").tag(26)
+                    }
+                    .frame(width: 150, height: 100)
+                    .clipped()
+                    .padding(.top, -20)
+                    .pickerStyle(.wheel)
+                }
+                VStack {
+                    Text("Fu:")
+                        .font(.title3)
+                    Picker("Fu", selection: $fu) {
+                        ForEach([20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 110], id: \.self) { value in
+                            Text("\(value)")
+                                .foregroundColor(han >= 5 ? .gray : .primary)
+                                .tag(value)
+                        }
+                    }
+                    .frame(width: 70, height: 100)
+                    .disabled(han >= 5)
+                    .padding(.top, -20)
+                    .pickerStyle(.wheel)
+                }
+                .foregroundStyle(han > 4 ? .gray : .black)
             }
-            Spacer()
         }
     }
 }
-
-struct Yaku: Identifiable {
-    let id = UUID()
-    let han: String
-    let entries: [String]
-}
-
-let yakuList: [Yaku] = [
-    Yaku(han: "1 Han (Closed)", entries: [
-        "門前自摸 (めんぜんつも) (Tsumo, Fully Concealed Hand) - self draw",
-        "立直 (リーチ) (Riichi) - no pon or chii",
-        "一発 (イッパツ) (Ippatsu) - win within first rotation after riichi, also can't be interrupted by tile calls",
-        "平和 (ピンフ) (Pinfu) - all sequences and must end with a two-sided wait",
-        "一盃口 (イーペイコー) (Pure Double Sequence) - 112233 kind of double sequence"
-    ]),
-    Yaku(han: "1 Han", entries: [
-        "海底撈月 (ハイテイラオユエ) (Under the Sea) - Tsumo with the last drawn tile from the wall",
-        "河底撈魚 (ホウテイラオユイ) (Under the River) - Ron with the last discarded tile",
-        "嶺上開花 (リンシャンカイホウ) (After a Kan) - win with a tile drawn from the dead wall immediately after calling a Kan",
-        "搶槓 (チャンカン) (Robbing a Kan) - calling Ron on another player's Kan (when you have a Tenpai for Thirteen Orphans, you can call on a Closed Kan)",
-        "断幺九 (タンヤオ) (All Simples) - winning with no honor or terminal tiles (2-8 number tiles only)",
-        "役牌 (やくはい) - a hand with at least one group of dragon, round wind, or seat wind tiles"
-    ]),
-    Yaku(han: "2 Han", entries: [
-        "両立直 (ダブリー) (Double Riichi) - declare Riichi with your starting hand before any tiles are called",
-        "全帯幺九 (チャンタ) (Half Outside Hand) - every sequence, triplet and pair contains at least one terminal tile or honor tiles (-1 Han if open)",
-        "三色同順 (サンショクドウジュン) (Mixed Triple Sequence) - three sequences with the same numbers across the three suits (-1 Han if open)",
-        "一気通貫 (イッキツウカン) (Pure Straight) - complete sequence 1–9 (-1 Han if open)",
-        "対々 (トイトイ) (All Triplets) - all triplets (or quads), no sequences",
-        "三暗刻 (サンアンコウ) (Three Concealed Triplets) - three sets of triplets (or quads) that were formed without calling any tiles",
-        "三色同刻 (サンショクドウコウ) (Triple Triplets) - three triplets with the same number in each suit",
-        "三槓子 (サンカンツ) (Three Kans) - three Kans, may be open",
-        "七対子 (チートイツ) (Seven Pairs) - seven pairs, closed only",
-        "混老頭 (ホンロウトウ) (All Terminals and Honors) - nothing but terminals and honors (usually scored with Seven Pairs or All Triplets)",
-        "小三元 (ショウサンゲン) (Little Three Dragons) - two triplets of dragon tiles plus a pair of the third"
-    ]),
-    Yaku(han: "3 Han", entries: [
-        "混一色 (ホンイーソー) (Half Flush) - single suit with honor tiles (-1 Han if open)",
-        "純全帯么 (ジュンチャン) (Fully Outside Hand) - all sets contain at least one terminal tile (-1 Han if open)",
-        "二盃口 (リャンペイコー) (Twice Pure Double Sequence) - two sets of Pure Double Sequence in two different suits (doesn't combine with Seven Pairs, closed only)"
-    ]),
-    Yaku(han: "6 Han", entries: [
-        "清一色 (チンイーソー) (Full Flush) - one suit of number tiles (-1 Han if open)"
-    ]),
-    Yaku(han: "Mangan", entries: [
-        "流し満貫 (ナガシマンガン) (Mangan at Draw) - all your discards were terminals/honors and no one called them (5 Han)"
-    ]),
-    Yaku(han: "Yakuman", entries: [
-        "数え役満 (かぞえやくまん) - if your hand adds up to 13+ Han",
-        "国士無双 (コクシムソウ) (Thirteen Orphans) - 1 & 9 of each suit, all winds, all dragons, plus one extra of any",
-        "四暗刻 (スーアンコウ) (Four Concealed Triplets) - four closed triplets (closed only, you can only call the last tile for the pair)",
-        "大三元 (ダイサンゲン) (Big Three Dragons) - three triplets of all three dragons",
-        "小四喜 (ショウスーシー) (Little Four Winds) - three triplets/quads of winds plus a pair of the fourth",
-        "大四喜 (ダイスーシー) (Big Four Winds) - four triplets/quads of all four winds",
-        "字一色 (ツーイーソー) (All Honors) - nothing but honor tiles",
-        "清老頭 (チンロウトウ) (All Terminals) - nothing but terminal tiles",
-        "緑一色 (リューイーソー) (All Green) - only green tiles (23468 bamboo + green dragon)",
-        "九連宝燈 (チューレンポートウ) (Nine Gates) - 1112345678999 + any one extra in the same suit (closed only)",
-        "四槓子 (スーカンツ) (Four Quads) - four Kans, open or closed",
-        "天和 (テンホー) (Blessing of Heaven) - dealer tsumo on the very first draw",
-        "地和 (チーホー) (Blessing of Earth) - non-dealer tsumo on first draw before any calls"
-    ])
-]

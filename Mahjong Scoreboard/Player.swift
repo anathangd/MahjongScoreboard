@@ -16,4 +16,8 @@ struct Player: Identifiable, Hashable {
     var loser: Bool
     var tenpai: Bool
     var riichi: Bool
+    
+    var han: Int = 1
+    var fu: Int = 20
+    var multRonWin = false
 }
