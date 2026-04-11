@@ -42,24 +42,27 @@ enum HandScoring {
         threePlayerMode: Bool
     ) -> TsumoScoreBreakdown {
         if han == 26 {
-            let baseWinnerPoints = 32000 * 2
+            let basePoints = 16000
 
             if winnerWind == "東" {
-                let winnerPoints = Int(Double(baseWinnerPoints) * 1.5)
-                let nonDealerPayment = Int(ceil(Double(winnerPoints / 3) / 100.0) * 100.0)
+                var nonDealerPayment = basePoints * 2
+                nonDealerPayment += 100 * honbaCount
                 return TsumoScoreBreakdown(
                     basePoints: 0,
-                    winnerPoints: winnerPoints,
+                    winnerPoints: threePlayerMode ? (nonDealerPayment * 2) : (nonDealerPayment * 3),
                     dealerPayment: 0,
                     nonDealerPayment: nonDealerPayment
                 )
             }
 
+            let dealerPayment = basePoints * 2 + (100 * honbaCount)
+            let nonDealerPayment = basePoints + (100 * honbaCount)
+
             return TsumoScoreBreakdown(
                 basePoints: 0,
-                winnerPoints: baseWinnerPoints,
-                dealerPayment: baseWinnerPoints / 2,
-                nonDealerPayment: baseWinnerPoints / 4
+                winnerPoints: threePlayerMode ? (dealerPayment + nonDealerPayment) : (dealerPayment + nonDealerPayment * 2),
+                dealerPayment: dealerPayment,
+                nonDealerPayment: nonDealerPayment
             )
         }
 

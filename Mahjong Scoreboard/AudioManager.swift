@@ -11,6 +11,23 @@ import AVFoundation
 class AudioManager: ObservableObject {
     var audioPlayer: AVAudioPlayer?
 
+    private let supportedAudioExtensions = ["m4a", "mp3", "wav"]
+
+    private func randomRiichiSoundURL() -> URL? {
+        let matchingURLs = supportedAudioExtensions.flatMap { fileExtension in
+            Bundle.main.urls(forResourcesWithExtension: fileExtension, subdirectory: nil) ?? []
+        }
+        .filter { url in
+            url.deletingPathExtension().lastPathComponent.lowercased().hasPrefix("riichi")
+        }
+
+        if let randomURL = matchingURLs.randomElement() {
+            return randomURL
+        }
+
+        return Bundle.main.url(forResource: "riichi", withExtension: "m4a")
+    }
+
     func playSound() {
         // Configure AVAudioSession to allow background music to continue
         do {
@@ -21,8 +38,8 @@ class AudioManager: ObservableObject {
         }
 
         // Load and play the sound
-        guard let soundURL = Bundle.main.url(forResource: "act_rich", withExtension: "mp3") else {
-            print("Error: MP3 file not found")
+        guard let soundURL = randomRiichiSoundURL() else {
+            print("Error: no riichi audio files found")
             return
         }
 

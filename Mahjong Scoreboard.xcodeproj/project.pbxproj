@@ -28,11 +28,14 @@
 		446029BA2F8A20A0009336C8 /* EnterNamesOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446029B92F8A20A0009336C8 /* EnterNamesOverlay.swift */; };
 		446029BC2F8A24B7009336C8 /* TimerOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446029BB2F8A24B7009336C8 /* TimerOverlay.swift */; };
 		446029BE2F8A2531009336C8 /* RiichiHonbaIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446029BD2F8A2531009336C8 /* RiichiHonbaIndicatorView.swift */; };
+		446029C02F8A5426009336C8 /* riichi1.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 446029BF2F8A5426009336C8 /* riichi1.m4a */; };
+		446029C22F8A558B009336C8 /* riichi2.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 446029C12F8A558B009336C8 /* riichi2.m4a */; };
+		446029C52F8A6F29009336C8 /* riichi4Patrick.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 446029C42F8A6F29009336C8 /* riichi4Patrick.m4a */; };
+		446029C62F8A6F29009336C8 /* riichi3Patrick.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 446029C32F8A6F29009336C8 /* riichi3Patrick.m4a */; };
 		44A288472E6FB54A008C2AFA /* Yaku.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A288462E6FB54A008C2AFA /* Yaku.swift */; };
 		44A288492E6FB5AF008C2AFA /* ShowFuButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A288482E6FB5AF008C2AFA /* ShowFuButton.swift */; };
 		44A2884B2E6FB673008C2AFA /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A2884A2E6FB673008C2AFA /* AudioManager.swift */; };
 		44A2884D2E6FBC4E008C2AFA /* ScoreChangeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A2884C2E6FBC4E008C2AFA /* ScoreChangeView.swift */; };
-		44E566522D8A97DE001A2A5E /* act_rich.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 44E566512D8A97DE001A2A5E /* act_rich.mp3 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -58,11 +61,14 @@
 		446029B92F8A20A0009336C8 /* EnterNamesOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnterNamesOverlay.swift; sourceTree = "<group>"; };
 		446029BB2F8A24B7009336C8 /* TimerOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerOverlay.swift; sourceTree = "<group>"; };
 		446029BD2F8A2531009336C8 /* RiichiHonbaIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiichiHonbaIndicatorView.swift; sourceTree = "<group>"; };
+		446029BF2F8A5426009336C8 /* riichi1.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = riichi1.m4a; sourceTree = "<group>"; };
+		446029C12F8A558B009336C8 /* riichi2.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = riichi2.m4a; sourceTree = "<group>"; };
+		446029C32F8A6F29009336C8 /* riichi3Patrick.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = riichi3Patrick.m4a; sourceTree = "<group>"; };
+		446029C42F8A6F29009336C8 /* riichi4Patrick.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = riichi4Patrick.m4a; sourceTree = "<group>"; };
 		44A288462E6FB54A008C2AFA /* Yaku.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Yaku.swift; sourceTree = "<group>"; };
 		44A288482E6FB5AF008C2AFA /* ShowFuButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowFuButton.swift; sourceTree = "<group>"; };
 		44A2884A2E6FB673008C2AFA /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
 		44A2884C2E6FBC4E008C2AFA /* ScoreChangeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreChangeView.swift; sourceTree = "<group>"; };
-		44E566512D8A97DE001A2A5E /* act_rich.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = act_rich.mp3; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -127,7 +133,10 @@
 		441D8EC52AAB728E00F5FE53 /* Preview Content */ = {
 			isa = PBXGroup;
 			children = (
-				44E566512D8A97DE001A2A5E /* act_rich.mp3 */,
+				446029C32F8A6F29009336C8 /* riichi3Patrick.m4a */,
+				446029C42F8A6F29009336C8 /* riichi4Patrick.m4a */,
+				446029C12F8A558B009336C8 /* riichi2.m4a */,
+				446029BF2F8A5426009336C8 /* riichi1.m4a */,
 				441D8EC62AAB728E00F5FE53 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
@@ -161,7 +170,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1430;
-				LastUpgradeCheck = 1640;
+				LastUpgradeCheck = 2630;
 				TargetAttributes = {
 					441D8EBB2AAB728E00F5FE53 = {
 						CreatedOnToolsVersion = 14.3.1;
@@ -191,9 +200,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				44E566522D8A97DE001A2A5E /* act_rich.mp3 in Resources */,
+				446029C02F8A5426009336C8 /* riichi1.m4a in Resources */,
+				446029C22F8A558B009336C8 /* riichi2.m4a in Resources */,
 				441D8EC72AAB728E00F5FE53 /* Preview Assets.xcassets in Resources */,
 				441D8EC42AAB728E00F5FE53 /* Assets.xcassets in Resources */,
+				446029C52F8A6F29009336C8 /* riichi4Patrick.m4a in Resources */,
+				446029C62F8A6F29009336C8 /* riichi3Patrick.m4a in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -290,6 +302,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -345,6 +358,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				VALIDATE_PRODUCT = YES;
@@ -361,8 +375,8 @@
 				DEVELOPMENT_ASSET_PATHS = "\"Mahjong Scoreboard/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Mahjong Scoreboard";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.board-games";
+				INFOPLIST_KEY_CFBundleDisplayName = "Riichi Score";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -377,6 +391,10 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NathanDavis.Mahjong-Scoreboard";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -393,8 +411,8 @@
 				DEVELOPMENT_ASSET_PATHS = "\"Mahjong Scoreboard/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Mahjong Scoreboard";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.board-games";
+				INFOPLIST_KEY_CFBundleDisplayName = "Riichi Score";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -409,6 +427,10 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NathanDavis.Mahjong-Scoreboard";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;

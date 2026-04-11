@@ -44,6 +44,36 @@ struct ScoringDisplay: View {
         threePlayerMode ? 1 : 2
     }
 
+    private var isLimitHand: Bool {
+        han >= 5
+    }
+
+    private var limitName: String? {
+        switch han {
+        case 5:
+            return "Mangan"
+        case 6...7:
+            return "Haneman"
+        case 8...10:
+            return "Baiman"
+        case 11...12:
+            return "Sanbaiman"
+        case 13...25:
+            return "Yakuman"
+        case 26:
+            return "Double yakuman"
+        default:
+            return nil
+        }
+    }
+
+    private var displayedHanFuText: String {
+        if let limitName {
+            return "Han: \(han) (\(limitName))"
+        }
+        return "Han: \(han), Fu: \(fu)"
+    }
+
     var body: some View {
         ZStack {
             Rectangle()
@@ -87,8 +117,23 @@ struct ScoringDisplay: View {
                         }
                         .font(.largeTitle)
                         .padding()
-                        Text("Han: \(han)\(han < 5 ? ", Fu: \(fu)" : "")")
-                        if han < 5 {
+                        Text(displayedHanFuText)
+                        if han == 26 {
+                            VStack {
+                                Text("Double yakuman base points: 16000")
+                                Text("Dealer tsumo payment: 16000 * 2 = 32000")
+                                Text("Honba points: \(honbaCount) * 100 = \(honbaCount * 100)")
+                                Text("Payout: 32000 + \(honbaCount * 100) = \(String(format: "%d", nonDealerPayment))")
+                            }
+                        } else if isLimitHand {
+                            VStack {
+                                Text("\(limitName ?? "Limit hand") base points: \(String(format: "%d", basePoints))")
+                                Text("Dealer base point multiplier: 2")
+                                Text("\(String(format: "%d", basePoints)) * 2 = \(String(format: "%d", nonDealerPayment))")
+                                Text("Honba points: \(honbaCount) * 100 = \(honbaCount * 100)")
+                                Text("Payout: \(String(format: "%d", nonDealerPayment - honbaCount * 100)) + \(honbaCount * 100) = \(String(format: "%d", nonDealerPayment))")
+                            }
+                        } else {
                             HStack(spacing: 2) {
                                 Text("Base points = \(String(format: "%d", fu)) fu * 2")
                                 Text("2 + \(String(format: "%d", han)) han")
@@ -105,19 +150,33 @@ struct ScoringDisplay: View {
                         .font(.largeTitle)
                         .padding()
                         VStack {
-                            Text("Han: \(han), Fu: \(fu)")
-                            HStack(spacing: 2) {
-                                Text("Base points = \(String(format: "%d", fu)) fu * 2")
-                                Text("2 + \(String(format: "%d", han)) han")
-                                    .font(.system(size: 12))
-                                    .baselineOffset(8)
-                                Text(" = \(String(format: "%d", fu * Int(pow(2.0, Double(2 + han)))))")
+                            if han == 26 {
+                                Text("Double yakuman base points: 16000")
+                                Text("Dealer tsumo payment: 16000 * 2 = 32000")
+                                Text("Honba points: \(String(format: "%d", honbaCount)) * 100 = \(String(format: "%d", honbaCount * 100))")
+                                Text("Payout: 32000 + \(String(format: "%d", honbaCount * 100)) = \(String(format: "%d", dealerPayment))")
+                            } else if isLimitHand {
+                                Text(displayedHanFuText)
+                                Text("\(limitName ?? "Limit hand") base points: \(String(format: "%d", basePoints))")
+                                Text("Dealer base point multiplier: 2")
+                                Text("\(String(format: "%d", basePoints)) * 2 = \(String(format: "%d", dealerPayment))")
+                                Text("Honba points: \(String(format: "%d", honbaCount)) * 100 = \(String(format: "%d", honbaCount * 100))")
+                                Text("Payout: \(String(format: "%d", dealerPayment - honbaCount * 100)) + \(String(format: "%d", honbaCount * 100)) = \(String(format: "%d", dealerPayment))")
+                            } else {
+                                Text("Han: \(han), Fu: \(fu)")
+                                HStack(spacing: 2) {
+                                    Text("Base points = \(String(format: "%d", fu)) fu * 2")
+                                    Text("2 + \(String(format: "%d", han)) han")
+                                        .font(.system(size: 12))
+                                        .baselineOffset(8)
+                                    Text(" = \(String(format: "%d", fu * Int(pow(2.0, Double(2 + han)))))")
+                                }
+                                Text("Dealer base point multiplier: 2")
+                                Text("\(String(format: "%d", basePoints)) * 2 = \(String(format: "%d", basePoints * 2))")
+                                Text("Rounded up to the nearest hundred: \(String(format: "%d", Int(ceil(Double(basePoints * 2) / 100.0) * 100.0)))")
+                                Text("Honba points: \(String(format: "%d", honbaCount)) * 100 = \(String(format: "%d", honbaCount * 100))")
+                                Text("Payout: \(String(format: "%d", Int(ceil(Double(basePoints * 2) / 100.0) * 100.0))) + \(String(format: "%d", honbaCount * 100)) = \(String(format: "%d", dealerPayment))")
                             }
-                            Text("Dealer base point multiplier: 2")
-                            Text("\(String(format: "%d", basePoints)) * 2 = \(String(format: "%d", basePoints * 2))")
-                            Text("Rounded up to the nearest hundred: \(String(format: "%d", Int(ceil(Double(basePoints * 2) / 100.0) * 100.0)))")
-                            Text("Honba points: \(String(format: "%d", honbaCount)) * 100 = \(String(format: "%d", honbaCount * 100))")
-                            Text("Payout: \(String(format: "%d", Int(ceil(Double(basePoints * 2) / 100.0) * 100.0))) + \(String(format: "%d", honbaCount * 100)) = \(String(format: "%d", dealerPayment))")
                         }
                         VStack {
                             Text("Non-dealers pay:")
@@ -127,22 +186,36 @@ struct ScoringDisplay: View {
                         .padding()
                     }
                     VStack {
-                        if winner == "東" {
-                            Text("Base point multiplier: 2")
-                        } else {
-                            Text("Non-dealer base point multiplier: 1")
-                        }
-                        if winner == "東" {
-                            
-                            Text("\(String(format: "%d", basePoints)) * 2 = \(String(format: "%d", basePoints * 2))")
-                            Text("Rounded up to the nearest hundred: \(String(format: "%d", Int(ceil(Double(basePoints * 2) / 100.0) * 100.0)))")
-                            Text("Honba points: \(String(format: "%d", honbaCount)) * 100 = \(String(format: "%d", honbaCount * 100))")
-                            Text("Payout: \(String(format: "%d", Int(ceil(Double(basePoints * 2) / 100.0) * 100.0))) + \(String(format: "%d", honbaCount * 100)) = \(String(format: "%d", nonDealerPayment))")
-                            
-                        } else {
-                            Text("\(String(format: "%d", basePoints)) * 1 = \(String(format: "%d", basePoints * 1))")
-                            Text("Rounded up to the nearest hundred: \(String(format: "%d", Int(ceil(Double(basePoints * 1) / 100.0) * 100.0)))")
-                            Text("Non-dealer payout: \(String(format: "%d", Int(ceil(Double(basePoints * 1) / 100.0) * 100.0))) * 1 + \(String(format: "%d", honbaCount * 100)) = \(String(format: "%d", nonDealerPayment))")
+                        if han != 26 {
+                            if isLimitHand {
+                                if winner == "東" {
+                                    // Text("\(limitName ?? "Limit hand") base points: \(String(format: "%d", basePoints))")
+                                } else {
+                                    Text("\(limitName ?? "Limit hand") base points: \(String(format: "%d", basePoints))")
+                                }
+                            } else if winner == "東" {
+                                Text("Base point multiplier: 2")
+                            } else {
+                                Text("Non-dealer base point multiplier: 1")
+                            }
+                            if isLimitHand {
+                                if winner == "東" && han != 26 {
+                                    // Text("Payout: \(String(format: "%d", nonDealerPayment - honbaCount * 100)) + \(String(format: "%d", honbaCount * 100)) = \(String(format: "%d", nonDealerPayment))")
+                                } else {
+                                    Text("Non-dealer payout: \(String(format: "%d", nonDealerPayment - honbaCount * 100)) + \(String(format: "%d", honbaCount * 100)) = \(String(format: "%d", nonDealerPayment))")
+                                }
+                            } else if winner == "東" {
+                                
+                                Text("\(String(format: "%d", basePoints)) * 2 = \(String(format: "%d", basePoints * 2))")
+                                Text("Rounded up to the nearest hundred: \(String(format: "%d", Int(ceil(Double(basePoints * 2) / 100.0) * 100.0)))")
+                                Text("Honba points: \(String(format: "%d", honbaCount)) * 100 = \(String(format: "%d", honbaCount * 100))")
+                                Text("Payout: \(String(format: "%d", Int(ceil(Double(basePoints * 2) / 100.0) * 100.0))) + \(String(format: "%d", honbaCount * 100)) = \(String(format: "%d", nonDealerPayment))")
+                                
+                            } else {
+                                Text("\(String(format: "%d", basePoints)) * 1 = \(String(format: "%d", basePoints * 1))")
+                                Text("Rounded up to the nearest hundred: \(String(format: "%d", Int(ceil(Double(basePoints * 1) / 100.0) * 100.0)))")
+                                Text("Non-dealer payout: \(String(format: "%d", Int(ceil(Double(basePoints * 1) / 100.0) * 100.0))) * 1 + \(String(format: "%d", honbaCount * 100)) = \(String(format: "%d", nonDealerPayment))")
+                            }
                         }
                     }
                     VStack {
@@ -181,19 +254,30 @@ struct ScoringDisplay: View {
                     .font(.largeTitle)
                     .padding()
                     VStack {
-                        Text("Han: \(han), Fu: \(fu)")
-                        HStack(spacing: 2) {
-                            Text("Base points = \(fu) fu * 2")
-                            Text("2 + \(han) han")
-                                .font(.system(size: 12))
-                                .baselineOffset(8)
-                            Text(" = \(String(format: "%d", fu * Int(pow(2.0, Double(2 + han)))))")
+                        Text(displayedHanFuText)
+                        if han == 26 {
+                            Text("Honba points: \(honbaCount) * 300 = \(honbaCount * 300)")
+                            Text("Payout: \(String(format: "%d", winnerPoints - honbaCount * 300)) + \(honbaCount * 300) = \(String(format: "%d", winnerPoints))")
+                        } else if isLimitHand {
+                            Text("\(limitName ?? "Limit hand") base points: \(String(format: "%d", basePoints))")
+                            Text("Base point multiplier: \(multiplier) (\(winner == "東" ? "dealer" : "non-dealer"))")
+                            Text("\(String(format: "%d", basePoints)) * \(multiplier) = \(String(format: "%d", basePoints * multiplier))")
+                            Text("Honba points: \(honbaCount) * 300 = \(honbaCount * 300)")
+                            Text("Payout: \(String(format: "%d", winnerPoints - honbaCount * 300)) + \(honbaCount * 300) = \(String(format: "%d", winnerPoints))")
+                        } else {
+                            HStack(spacing: 2) {
+                                Text("Base points = \(fu) fu * 2")
+                                Text("2 + \(han) han")
+                                    .font(.system(size: 12))
+                                    .baselineOffset(8)
+                                Text(" = \(String(format: "%d", fu * Int(pow(2.0, Double(2 + han)))))")
+                            }
+                            Text("Base point multiplier: \(multiplier) (\(winner == "東" ? "dealer" : "non-dealer"))")
+                            Text("\(String(format: "%d", basePoints)) * \(multiplier) = \(String(format: "%d", basePoints * multiplier))")
+                            Text("Rounded up the nearest hundred or minimum: \(String(format: "%d", winnerPoints - honbaCount * 300))")
+                            Text("Honba points: \(honbaCount) * 300 = \(honbaCount * 300)")
+                            Text("Payout: \(String(format: "%d", (winnerPoints - honbaCount * 300))) + \(honbaCount * 300) = \(String(format: "%d", winnerPoints))")
                         }
-                        Text("Base point multiplier: \(multiplier) (\(winner == "東" ? "dealer" : "non-dealer"))")
-                        Text("\(String(format: "%d", basePoints)) * \(multiplier) = \(String(format: "%d", basePoints * multiplier))")
-                        Text("Rounded up the nearest hundred or minimum: \(String(format: "%d", winnerPoints - honbaCount * 300))")
-                        Text("Honba points: \(honbaCount) * 300 = \(honbaCount * 300)")
-                        Text("Payout: \(String(format: "%d", (winnerPoints - honbaCount * 300))) + \(honbaCount * 300) = \(String(format: "%d", winnerPoints))")
                     }
                     VStack {
                         Text("Total winnings:")
