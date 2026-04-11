@@ -40,7 +40,6 @@ struct ShowFuButton: View {
                             )
                     }
                 }
-                .padding(.init(top: 0, leading: 0, bottom: -10, trailing: 30))
                 .disabled(timerOn ? true : false)
                 .simultaneousGesture(
                     LongPressGesture(minimumDuration: 0.5)

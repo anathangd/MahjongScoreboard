@@ -15,6 +15,19 @@
 		441D8ED22AAC8DFF00F5FE53 /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441D8ED12AAC8DFF00F5FE53 /* Player.swift */; };
 		441D8ED42AACD0CC00F5FE53 /* TenpaiButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441D8ED32AACD0CC00F5FE53 /* TenpaiButton.swift */; };
 		441D8ED62AACE06500F5FE53 /* RiichiButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441D8ED52AACE06500F5FE53 /* RiichiButton.swift */; };
+		44218EC52F889E0600101C9F /* PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44218EC42F889E0600101C9F /* PlayerView.swift */; };
+		446029A82F8A0EF5009336C8 /* HandScoring.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446029A72F8A0EF5009336C8 /* HandScoring.swift */; };
+		446029AA2F8A0F13009336C8 /* MultipleRonScoring.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446029A92F8A0F13009336C8 /* MultipleRonScoring.swift */; };
+		446029AC2F8A118A009336C8 /* ScoreApplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446029AB2F8A118A009336C8 /* ScoreApplication.swift */; };
+		446029AE2F8A1BAF009336C8 /* RonOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446029AD2F8A1BAF009336C8 /* RonOverlay.swift */; };
+		446029B02F8A1BB9009336C8 /* TsumoOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446029AF2F8A1BB9009336C8 /* TsumoOverlay.swift */; };
+		446029B22F8A1BC6009336C8 /* MultipleRonOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446029B12F8A1BC6009336C8 /* MultipleRonOverlay.swift */; };
+		446029B42F8A1DB1009336C8 /* ShowFuOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446029B32F8A1DB1009336C8 /* ShowFuOverlay.swift */; };
+		446029B62F8A1E7B009336C8 /* ShowNamesOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446029B52F8A1E7B009336C8 /* ShowNamesOverlay.swift */; };
+		446029B82F8A1FFE009336C8 /* ExhaustOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446029B72F8A1FFE009336C8 /* ExhaustOverlay.swift */; };
+		446029BA2F8A20A0009336C8 /* EnterNamesOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446029B92F8A20A0009336C8 /* EnterNamesOverlay.swift */; };
+		446029BC2F8A24B7009336C8 /* TimerOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446029BB2F8A24B7009336C8 /* TimerOverlay.swift */; };
+		446029BE2F8A2531009336C8 /* RiichiHonbaIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446029BD2F8A2531009336C8 /* RiichiHonbaIndicatorView.swift */; };
 		44A288472E6FB54A008C2AFA /* Yaku.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A288462E6FB54A008C2AFA /* Yaku.swift */; };
 		44A288492E6FB5AF008C2AFA /* ShowFuButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A288482E6FB5AF008C2AFA /* ShowFuButton.swift */; };
 		44A2884B2E6FB673008C2AFA /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A2884A2E6FB673008C2AFA /* AudioManager.swift */; };
@@ -32,6 +45,19 @@
 		441D8ED12AAC8DFF00F5FE53 /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
 		441D8ED32AACD0CC00F5FE53 /* TenpaiButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TenpaiButton.swift; sourceTree = "<group>"; };
 		441D8ED52AACE06500F5FE53 /* RiichiButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiichiButton.swift; sourceTree = "<group>"; };
+		44218EC42F889E0600101C9F /* PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
+		446029A72F8A0EF5009336C8 /* HandScoring.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandScoring.swift; sourceTree = "<group>"; };
+		446029A92F8A0F13009336C8 /* MultipleRonScoring.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipleRonScoring.swift; sourceTree = "<group>"; };
+		446029AB2F8A118A009336C8 /* ScoreApplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreApplication.swift; sourceTree = "<group>"; };
+		446029AD2F8A1BAF009336C8 /* RonOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RonOverlay.swift; sourceTree = "<group>"; };
+		446029AF2F8A1BB9009336C8 /* TsumoOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TsumoOverlay.swift; sourceTree = "<group>"; };
+		446029B12F8A1BC6009336C8 /* MultipleRonOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipleRonOverlay.swift; sourceTree = "<group>"; };
+		446029B32F8A1DB1009336C8 /* ShowFuOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowFuOverlay.swift; sourceTree = "<group>"; };
+		446029B52F8A1E7B009336C8 /* ShowNamesOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowNamesOverlay.swift; sourceTree = "<group>"; };
+		446029B72F8A1FFE009336C8 /* ExhaustOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExhaustOverlay.swift; sourceTree = "<group>"; };
+		446029B92F8A20A0009336C8 /* EnterNamesOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnterNamesOverlay.swift; sourceTree = "<group>"; };
+		446029BB2F8A24B7009336C8 /* TimerOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerOverlay.swift; sourceTree = "<group>"; };
+		446029BD2F8A2531009336C8 /* RiichiHonbaIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiichiHonbaIndicatorView.swift; sourceTree = "<group>"; };
 		44A288462E6FB54A008C2AFA /* Yaku.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Yaku.swift; sourceTree = "<group>"; };
 		44A288482E6FB5AF008C2AFA /* ShowFuButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowFuButton.swift; sourceTree = "<group>"; };
 		44A2884A2E6FB673008C2AFA /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
@@ -69,18 +95,31 @@
 		441D8EBE2AAB728E00F5FE53 /* Mahjong Scoreboard */ = {
 			isa = PBXGroup;
 			children = (
-				441D8EBF2AAB728E00F5FE53 /* Mahjong_ScoreboardApp.swift */,
-				441D8EC12AAB728E00F5FE53 /* ContentView.swift */,
-				44A2884C2E6FBC4E008C2AFA /* ScoreChangeView.swift */,
-				44A2884A2E6FB673008C2AFA /* AudioManager.swift */,
-				44A288482E6FB5AF008C2AFA /* ShowFuButton.swift */,
-				44A288462E6FB54A008C2AFA /* Yaku.swift */,
-				440522952E5C803200305437 /* ScoringDisplay.swift */,
-				441D8ED52AACE06500F5FE53 /* RiichiButton.swift */,
-				441D8ED32AACD0CC00F5FE53 /* TenpaiButton.swift */,
-				441D8ED12AAC8DFF00F5FE53 /* Player.swift */,
 				441D8EC32AAB728E00F5FE53 /* Assets.xcassets */,
+				44A2884A2E6FB673008C2AFA /* AudioManager.swift */,
+				441D8EC12AAB728E00F5FE53 /* ContentView.swift */,
+				446029B92F8A20A0009336C8 /* EnterNamesOverlay.swift */,
+				446029B72F8A1FFE009336C8 /* ExhaustOverlay.swift */,
+				446029A72F8A0EF5009336C8 /* HandScoring.swift */,
+				441D8EBF2AAB728E00F5FE53 /* Mahjong_ScoreboardApp.swift */,
+				446029B12F8A1BC6009336C8 /* MultipleRonOverlay.swift */,
+				446029A92F8A0F13009336C8 /* MultipleRonScoring.swift */,
+				441D8ED12AAC8DFF00F5FE53 /* Player.swift */,
+				44218EC42F889E0600101C9F /* PlayerView.swift */,
 				441D8EC52AAB728E00F5FE53 /* Preview Content */,
+				441D8ED52AACE06500F5FE53 /* RiichiButton.swift */,
+				446029BD2F8A2531009336C8 /* RiichiHonbaIndicatorView.swift */,
+				446029AD2F8A1BAF009336C8 /* RonOverlay.swift */,
+				446029AB2F8A118A009336C8 /* ScoreApplication.swift */,
+				44A2884C2E6FBC4E008C2AFA /* ScoreChangeView.swift */,
+				440522952E5C803200305437 /* ScoringDisplay.swift */,
+				44A288482E6FB5AF008C2AFA /* ShowFuButton.swift */,
+				446029B32F8A1DB1009336C8 /* ShowFuOverlay.swift */,
+				446029B52F8A1E7B009336C8 /* ShowNamesOverlay.swift */,
+				441D8ED32AACD0CC00F5FE53 /* TenpaiButton.swift */,
+				446029BB2F8A24B7009336C8 /* TimerOverlay.swift */,
+				446029AF2F8A1BB9009336C8 /* TsumoOverlay.swift */,
+				44A288462E6FB54A008C2AFA /* Yaku.swift */,
 			);
 			path = "Mahjong Scoreboard";
 			sourceTree = "<group>";
@@ -165,15 +204,28 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				446029A82F8A0EF5009336C8 /* HandScoring.swift in Sources */,
+				446029AC2F8A118A009336C8 /* ScoreApplication.swift in Sources */,
 				441D8ED22AAC8DFF00F5FE53 /* Player.swift in Sources */,
 				44A2884D2E6FBC4E008C2AFA /* ScoreChangeView.swift in Sources */,
 				441D8ED62AACE06500F5FE53 /* RiichiButton.swift in Sources */,
+				446029B62F8A1E7B009336C8 /* ShowNamesOverlay.swift in Sources */,
+				446029B22F8A1BC6009336C8 /* MultipleRonOverlay.swift in Sources */,
+				44218EC52F889E0600101C9F /* PlayerView.swift in Sources */,
 				44A288472E6FB54A008C2AFA /* Yaku.swift in Sources */,
+				446029B42F8A1DB1009336C8 /* ShowFuOverlay.swift in Sources */,
+				446029BE2F8A2531009336C8 /* RiichiHonbaIndicatorView.swift in Sources */,
+				446029B02F8A1BB9009336C8 /* TsumoOverlay.swift in Sources */,
+				446029B82F8A1FFE009336C8 /* ExhaustOverlay.swift in Sources */,
 				441D8EC22AAB728E00F5FE53 /* ContentView.swift in Sources */,
 				441D8ED42AACD0CC00F5FE53 /* TenpaiButton.swift in Sources */,
+				446029BA2F8A20A0009336C8 /* EnterNamesOverlay.swift in Sources */,
 				44A288492E6FB5AF008C2AFA /* ShowFuButton.swift in Sources */,
 				44A2884B2E6FB673008C2AFA /* AudioManager.swift in Sources */,
 				440522962E5C803200305437 /* ScoringDisplay.swift in Sources */,
+				446029AA2F8A0F13009336C8 /* MultipleRonScoring.swift in Sources */,
+				446029AE2F8A1BAF009336C8 /* RonOverlay.swift in Sources */,
+				446029BC2F8A24B7009336C8 /* TimerOverlay.swift in Sources */,
 				441D8EC02AAB728E00F5FE53 /* Mahjong_ScoreboardApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -317,7 +369,7 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -349,7 +401,7 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

@@ -8,33 +8,77 @@
 import SwiftUI
 
 struct ScoringDisplay: View {
-    @Binding var winner: String
-    @Binding var wasTsumo: Bool
-    @Binding var wasRon: Bool
-    @Binding var han: Int
-    @Binding var fu: Int
-    @Binding var honbaCount: Int
-    @Binding var basePoints: Int
-    @Binding var nonDealerPayment: Int
-    @Binding var riichiPot: Int
-    @Binding var dealerPayment: Int
-    @Binding var loser: String
-    @Binding var multiplier: Int
-    @Binding var winnerPoints: Int
+    let winner: String
+    let wasTsumo: Bool
+    let wasRon: Bool
+    let han: Int
+    let fu: Int
+    let honbaCount: Int
+    let basePoints: Int
+    let nonDealerPayment: Int
+    let riichiPot: Int
+    let dealerPayment: Int
+    let loser: String
+    let multiplier: Int
+    let winnerPoints: Int
+    let threePlayerMode: Bool
+    let multipleRonTitle: String?
+    let multipleRonSummaryLines: [String]
+    let multipleRonTotalPaid: Int
+    let multipleRonHonbaIncreases: Bool
+    let onDismiss: () -> Void
+
+    private var isMultipleRon: Bool {
+        multipleRonTitle != nil
+    }
+
+    private var titleText: String {
+        multipleRonTitle ?? "\(winner)の和了"
+    }
+
+    private var dealerTsumoPayerCount: Int {
+        threePlayerMode ? 2 : 3
+    }
+
+    private var nonDealerTsumoPayerCount: Int {
+        threePlayerMode ? 1 : 2
+    }
+
     var body: some View {
         ZStack {
             Rectangle()
                 .ignoresSafeArea()
                 .foregroundColor(.black)
                 .opacity(0.8)
-                .onTapGesture {
-                    
-                }
             VStack {
-                Text("\(winner)の勝ち")
+                Text(titleText)
                     .font(.system(size: 50))
                     .padding()
-                
+
+                if isMultipleRon {
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(multipleRonSummaryLines, id: \.self) { line in
+                            Text(line)
+                                .font(.largeTitle)
+                        }
+                    }
+                    .font(.title2)
+                    .padding(.top, 6)
+
+                    VStack {
+                        Text("Total paid:")
+                        Text("\(multipleRonTotalPaid)")
+                    }
+                    .font(.largeTitle)
+                    .padding(.top, 8)
+
+                    if multipleRonHonbaIncreases {
+                        Text("Honba increases by 1")
+                            .font(.title2)
+                            .padding(.top, 6)
+                    }
+                }
+
                 if wasTsumo {
                     if winner == "東" {
                         VStack {
@@ -43,6 +87,16 @@ struct ScoringDisplay: View {
                         }
                         .font(.largeTitle)
                         .padding()
+                        Text("Han: \(han)\(han < 5 ? ", Fu: \(fu)" : "")")
+                        if han < 5 {
+                            HStack(spacing: 2) {
+                                Text("Base points = \(String(format: "%d", fu)) fu * 2")
+                                Text("2 + \(String(format: "%d", han)) han")
+                                    .font(.system(size: 12))
+                                    .baselineOffset(8)
+                                Text(" = \(String(format: "%d", fu * Int(pow(2.0, Double(2 + han)))))")
+                            }
+                        }
                     } else {
                         VStack {
                             Text("東 pays:")
@@ -62,11 +116,11 @@ struct ScoringDisplay: View {
                             Text("Dealer base point multiplier: 2")
                             Text("\(String(format: "%d", basePoints)) * 2 = \(String(format: "%d", basePoints * 2))")
                             Text("Rounded up to the nearest hundred: \(String(format: "%d", Int(ceil(Double(basePoints * 2) / 100.0) * 100.0)))")
-                            Text("Honba points: \(String(format: "%d", honbaCount)) * 300 = \(String(format: "%d", honbaCount * 300))")
-                            Text("Payout: \(String(format: "%d", Int(ceil(Double(basePoints * 2) / 100.0) * 100.0))) + \(String(format: "%d", honbaCount * 300)) = \(String(format: "%d", dealerPayment))")
+                            Text("Honba points: \(String(format: "%d", honbaCount)) * 100 = \(String(format: "%d", honbaCount * 100))")
+                            Text("Payout: \(String(format: "%d", Int(ceil(Double(basePoints * 2) / 100.0) * 100.0))) + \(String(format: "%d", honbaCount * 100)) = \(String(format: "%d", dealerPayment))")
                         }
                         VStack {
-                            Text("南, 西, 北 pay:")
+                            Text("Non-dealers pay:")
                             Text("\(String(format: "%d", nonDealerPayment))")
                         }
                         .font(.largeTitle)
@@ -82,37 +136,37 @@ struct ScoringDisplay: View {
                             
                             Text("\(String(format: "%d", basePoints)) * 2 = \(String(format: "%d", basePoints * 2))")
                             Text("Rounded up to the nearest hundred: \(String(format: "%d", Int(ceil(Double(basePoints * 2) / 100.0) * 100.0)))")
-                            Text("Honba points: \(String(format: "%d", honbaCount)) * 300 = \(String(format: "%d", honbaCount * 300))")
-                            Text("Payout: \(String(format: "%d", Int(ceil(Double(basePoints * 2) / 100.0) * 100.0))) + \(String(format: "%d", honbaCount * 300)) = \(String(format: "%d", nonDealerPayment))")
+                            Text("Honba points: \(String(format: "%d", honbaCount)) * 100 = \(String(format: "%d", honbaCount * 100))")
+                            Text("Payout: \(String(format: "%d", Int(ceil(Double(basePoints * 2) / 100.0) * 100.0))) + \(String(format: "%d", honbaCount * 100)) = \(String(format: "%d", nonDealerPayment))")
                             
                         } else {
                             Text("\(String(format: "%d", basePoints)) * 1 = \(String(format: "%d", basePoints * 1))")
                             Text("Rounded up to the nearest hundred: \(String(format: "%d", Int(ceil(Double(basePoints * 1) / 100.0) * 100.0)))")
-                            Text("Non-dealer payout: \(String(format: "%d", Int(ceil(Double(basePoints * 1) / 100.0) * 100.0))) * 1 + \(String(format: "%d", honbaCount * 300)) = \(String(format: "%d", nonDealerPayment))")
+                            Text("Non-dealer payout: \(String(format: "%d", Int(ceil(Double(basePoints * 1) / 100.0) * 100.0))) * 1 + \(String(format: "%d", honbaCount * 100)) = \(String(format: "%d", nonDealerPayment))")
                         }
                     }
                     VStack {
                         Text("Total winnings:")
                         if winner == "東" {
-                            Text("\(String(format: "%d", nonDealerPayment * 3 + riichiPot))")
+                            Text("\(String(format: "%d", nonDealerPayment * dealerTsumoPayerCount + riichiPot))")
                         } else {
-                            Text("\(String(format: "%d", dealerPayment + (nonDealerPayment * 2) + riichiPot))")
+                            Text("\(String(format: "%d", dealerPayment + (nonDealerPayment * nonDealerTsumoPayerCount) + riichiPot))")
                         }
                     }
                     .padding()
                     .font(.largeTitle)
                     VStack {
                         if winner == "東" {
-                            Text("Payout: \(String(format: "%d", nonDealerPayment)) * 3 = \(String(format: "%d", nonDealerPayment * 3))")
+                            Text("Payout: \(String(format: "%d", nonDealerPayment)) * \(dealerTsumoPayerCount) = \(String(format: "%d", nonDealerPayment * dealerTsumoPayerCount))")
                         } else {
-                            Text("Payout: \(String(format: "%d", dealerPayment)) + \(String(format: "%d", nonDealerPayment)) * 2 = \(String(format: "%d", dealerPayment + nonDealerPayment * 2))")
+                            Text("Payout: \(String(format: "%d", dealerPayment)) + \(String(format: "%d", nonDealerPayment)) * \(nonDealerTsumoPayerCount) = \(String(format: "%d", dealerPayment + nonDealerPayment * nonDealerTsumoPayerCount))")
                         }
                         if riichiPot > 0 {
                             Text("Riichi pot: \(String(format: "%d", riichiPot))")
                             if winner == "東" {
-                                Text("\(String(format: "%d", nonDealerPayment * 3)) + \(String(format: "%d", riichiPot)) = \(String(format: "%d", nonDealerPayment * 3 + riichiPot))")
+                                Text("\(String(format: "%d", nonDealerPayment * dealerTsumoPayerCount)) + \(String(format: "%d", riichiPot)) = \(String(format: "%d", nonDealerPayment * dealerTsumoPayerCount + riichiPot))")
                             } else {
-                                Text("\(String(format: "%d", dealerPayment + nonDealerPayment * 2)) + \(String(format: "%d", riichiPot)) = \(String(format: "%d", dealerPayment + nonDealerPayment * 2 + riichiPot))")
+                                Text("\(String(format: "%d", dealerPayment + nonDealerPayment * nonDealerTsumoPayerCount)) + \(String(format: "%d", riichiPot)) = \(String(format: "%d", dealerPayment + nonDealerPayment * nonDealerTsumoPayerCount + riichiPot))")
                             }
                         }
                         
@@ -122,7 +176,7 @@ struct ScoringDisplay: View {
                 if wasRon {
                     VStack {
                         Text("\(loser) pays:")
-                        Text("1300")
+                        Text("\(String(format: "%d", winnerPoints))")
                     }
                     .font(.largeTitle)
                     .padding()
@@ -143,7 +197,7 @@ struct ScoringDisplay: View {
                     }
                     VStack {
                         Text("Total winnings:")
-                        Text("2300")
+                        Text("\(String(format: "%d", winnerPoints + riichiPot))")
                     }
                     .padding()
                     .font(.largeTitle)
@@ -162,10 +216,16 @@ struct ScoringDisplay: View {
                 }
             }
             .foregroundStyle(.white)
+            Color.clear
+                .contentShape(Rectangle())
+                .ignoresSafeArea()
+                .onTapGesture {
+                    onDismiss()
+                }
         }
     }
 }
 
 #Preview {
-    ScoringDisplay(winner: .constant("東"), wasTsumo: .constant(false), wasRon: .constant(true), han: .constant(1), fu: .constant(20), honbaCount: .constant(1), basePoints: .constant(160), nonDealerPayment: .constant(800), riichiPot: .constant(1000), dealerPayment: .constant(1300), loser: .constant("西"), multiplier: .constant(6), winnerPoints: .constant(1500))
+    ScoringDisplay(winner: "東", wasTsumo: false, wasRon: true, han: 1, fu: 20, honbaCount: 1, basePoints: 160, nonDealerPayment: 800, riichiPot: 1000, dealerPayment: 1300, loser: "西", multiplier: 6, winnerPoints: 1500, threePlayerMode: false, multipleRonTitle: nil, multipleRonSummaryLines: [], multipleRonTotalPaid: 0, multipleRonHonbaIncreases: false, onDismiss: {})
 }
