@@ -11,7 +11,6 @@
 		441D8EC02AAB728E00F5FE53 /* Mahjong_ScoreboardApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441D8EBF2AAB728E00F5FE53 /* Mahjong_ScoreboardApp.swift */; };
 		441D8EC22AAB728E00F5FE53 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441D8EC12AAB728E00F5FE53 /* ContentView.swift */; };
 		441D8EC42AAB728E00F5FE53 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 441D8EC32AAB728E00F5FE53 /* Assets.xcassets */; };
-		441D8EC72AAB728E00F5FE53 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 441D8EC62AAB728E00F5FE53 /* Preview Assets.xcassets */; };
 		441D8ED22AAC8DFF00F5FE53 /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441D8ED12AAC8DFF00F5FE53 /* Player.swift */; };
 		441D8ED42AACD0CC00F5FE53 /* TenpaiButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441D8ED32AACD0CC00F5FE53 /* TenpaiButton.swift */; };
 		441D8ED62AACE06500F5FE53 /* RiichiButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441D8ED52AACE06500F5FE53 /* RiichiButton.swift */; };
@@ -112,7 +111,7 @@
 				446029A92F8A0F13009336C8 /* MultipleRonScoring.swift */,
 				441D8ED12AAC8DFF00F5FE53 /* Player.swift */,
 				44218EC42F889E0600101C9F /* PlayerView.swift */,
-				441D8EC52AAB728E00F5FE53 /* Preview Content */,
+				441D8EC52AAB728E00F5FE53 /* Riichi Sounds */,
 				441D8ED52AACE06500F5FE53 /* RiichiButton.swift */,
 				446029BD2F8A2531009336C8 /* RiichiHonbaIndicatorView.swift */,
 				446029AD2F8A1BAF009336C8 /* RonOverlay.swift */,
@@ -130,7 +129,7 @@
 			path = "Mahjong Scoreboard";
 			sourceTree = "<group>";
 		};
-		441D8EC52AAB728E00F5FE53 /* Preview Content */ = {
+		441D8EC52AAB728E00F5FE53 /* Riichi Sounds */ = {
 			isa = PBXGroup;
 			children = (
 				446029C32F8A6F29009336C8 /* riichi3Patrick.m4a */,
@@ -139,7 +138,7 @@
 				446029BF2F8A5426009336C8 /* riichi1.m4a */,
 				441D8EC62AAB728E00F5FE53 /* Preview Assets.xcassets */,
 			);
-			path = "Preview Content";
+			path = "Riichi Sounds";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -202,7 +201,6 @@
 			files = (
 				446029C02F8A5426009336C8 /* riichi1.m4a in Resources */,
 				446029C22F8A558B009336C8 /* riichi2.m4a in Resources */,
-				441D8EC72AAB728E00F5FE53 /* Preview Assets.xcassets in Resources */,
 				441D8EC42AAB728E00F5FE53 /* Assets.xcassets in Resources */,
 				446029C52F8A6F29009336C8 /* riichi4Patrick.m4a in Resources */,
 				446029C62F8A6F29009336C8 /* riichi3Patrick.m4a in Resources */,
@@ -372,7 +370,6 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Mahjong Scoreboard/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Riichi Score";
@@ -388,7 +385,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NathanDavis.Mahjong-Scoreboard";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -408,7 +405,6 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Mahjong Scoreboard/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Riichi Score";
@@ -424,7 +420,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NathanDavis.Mahjong-Scoreboard";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

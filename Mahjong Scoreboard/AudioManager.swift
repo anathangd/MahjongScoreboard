@@ -12,8 +12,21 @@ class AudioManager: ObservableObject {
     var audioPlayer: AVAudioPlayer?
 
     private let supportedAudioExtensions = ["m4a", "mp3", "wav"]
+    private let riichiSoundNames = ["riichi1", "riichi2", "riichi3Patrick", "riichi4Patrick"]
 
     private func randomRiichiSoundURL() -> URL? {
+        let explicitMatch = riichiSoundNames.compactMap { name in
+            Bundle.main.url(
+                forResource: name,
+                withExtension: "m4a",
+                subdirectory: "Riichi Sounds"
+            )
+        }.randomElement()
+
+        if let explicitMatch {
+            return explicitMatch
+        }
+
         let matchingURLs = supportedAudioExtensions.flatMap { fileExtension in
             Bundle.main.urls(forResourcesWithExtension: fileExtension, subdirectory: nil) ?? []
         }
@@ -29,9 +42,10 @@ class AudioManager: ObservableObject {
     }
 
     func playSound() {
-        // Configure AVAudioSession to allow background music to continue
+        // Playback ensures sound is audible even when the device is in silent mode.
+        // mixWithOthers avoids interrupting currently playing audio.
         do {
-            try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default, options: [])
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
             print("Error setting up audio session: \(error)")
@@ -45,8 +59,9 @@ class AudioManager: ObservableObject {
 
         do {
             audioPlayer = try AVAudioPlayer(contentsOf: soundURL)
+            audioPlayer?.prepareToPlay()
             audioPlayer?.play()
-            print("Playing sound effect...")
+            print("Playing sound effect from: \(soundURL.lastPathComponent)")
         } catch {
             print("Error playing sound: \(error)")
         }
