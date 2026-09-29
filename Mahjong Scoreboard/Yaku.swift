@@ -25,7 +25,7 @@ let yakuList: [Yaku] = [
         "海底撈月 (ハイテイラオユエ) (**Under the Sea**) - Tsumo with the last drawn tile from the wall",
         "河底撈魚 (ホウテイラオユイ) (**Under the River**) - Ron with the last discarded tile",
         "嶺上開花 (リンシャンカイホウ) (**After a Kan**) - win with a tile drawn from the dead wall immediately after calling a Kan",
-        "搶槓 (チャンカン) (**Robbing a Kan**) - calling Ron on another player's Kan (when you have a Tenpai for Thirteen Orphans, you can call on a Closed Kan)",
+        "搶槓 (チャンカン) (**Robbing a Kan**) - calling Ron on a tile used to make an Added Kan (加槓). A Closed Kan (暗槓) normally cannot be robbed, except to complete Thirteen Orphans",
         "断幺九 (タンヤオ) (**All Simples**) - winning with no honor or terminal tiles (2-8 number tiles only)",
         "役牌 (やくはい) - a hand with at least one group of dragon, round wind, or seat wind tiles"
     ]),
@@ -76,3 +76,152 @@ let yakuList: [Yaku] = [
         
     ])
 ]
+
+struct YakuTileExample {
+    let title: String
+    let groups: [String]
+    let accessibilityDescription: String
+    var isGreen = false
+
+    static func example(for entry: String) -> YakuTileExample? {
+        let examples: [(prefix: String, example: YakuTileExample)] = [
+            ("全帯幺九", YakuTileExample(
+                title: "Example hand",
+                groups: ["🀇🀈🀉", "🀟🀠🀡", "🀐🀐🀐", "🀀🀀🀀", "🀆🀆"],
+                accessibilityDescription: "1, 2, 3 of characters; 7, 8, 9 of circles; three 1s of bamboo; three East winds; a pair of white dragons."
+            )),
+            ("対々", YakuTileExample(
+                title: "Example hand",
+                groups: ["🀈🀈🀈", "🀔🀔🀔", "🀠🀠🀠", "🀄︎🀄︎🀄︎", "🀀🀀"],
+                accessibilityDescription: "Triplets of 2 characters, 5 bamboo, 8 circles, and red dragons; a pair of East winds."
+            )),
+            ("混老頭", YakuTileExample(
+                title: "Example hand",
+                groups: ["🀇🀇🀇", "🀡🀡🀡", "🀀🀀🀀", "🀅🀅🀅", "🀘🀘"],
+                accessibilityDescription: "Triplets of 1 characters, 9 circles, East winds, and green dragons; a pair of 9 bamboo."
+            )),
+            ("小三元", YakuTileExample(
+                title: "Example hand",
+                groups: ["🀄︎🀄︎🀄︎", "🀅🀅🀅", "🀆🀆"],
+                accessibilityDescription: "Red and green dragon triplets, a white dragon pair, 1, 2, 3 characters, and 4, 5, 6 bamboo."
+            )),
+            ("混一色", YakuTileExample(
+                title: "Example hand",
+                groups: ["🀇🀈🀉", "🀊🀋🀌", "🀎🀎🀎", "🀀🀀🀀", "🀆🀆"],
+                accessibilityDescription: "1, 2, 3 and 4, 5, 6 characters; three 8 characters; three East winds; a white dragon pair."
+            )),
+            ("純全帯么", YakuTileExample(
+                title: "Example hand",
+                groups: ["🀇🀈🀉", "🀖🀗🀘", "🀙🀚🀛", "🀏🀏🀏", "🀡🀡"],
+                accessibilityDescription: "1, 2, 3 characters; 7, 8, 9 bamboo; 1, 2, 3 circles; three 9 characters; a pair of 9 circles."
+            )),
+            ("二盃口", YakuTileExample(
+                title: "Example closed hand",
+                groups: ["🀇🀈🀉", "🀇🀈🀉", "🀓🀔🀕", "🀓🀔🀕", "🀝🀝"],
+                accessibilityDescription: "Two identical 1, 2, 3 character sequences; two identical 4, 5, 6 bamboo sequences; a pair of 5 circles. All concealed."
+            )),
+            ("清一色", YakuTileExample(
+                title: "Example hand",
+                groups: ["🀇🀈🀉", "🀉🀊🀋", "🀌🀍🀎", "🀏🀏🀏", "🀋🀋"],
+                accessibilityDescription: "1, 2, 3; 3, 4, 5; 6, 7, 8; three 9s; and a pair of 5s, all characters."
+            )),
+            ("国士無双", YakuTileExample(
+                title: "Example completed hand",
+                groups: ["🀇🀏", "🀐🀘", "🀙🀡", "🀀🀁🀂🀃", "🀄︎🀅🀆", "🀇"],
+                accessibilityDescription: "1 and 9 of each suit, all four winds, all three dragons, plus a second 1 of characters."
+            )),
+            ("小四喜", YakuTileExample(
+                title: "Example hand",
+                groups: ["🀀🀀🀀", "🀁🀁🀁", "🀂🀂🀂", "🀃🀃"],
+                accessibilityDescription: "East, South, and West wind triplets; a North wind pair; 1, 2, 3 characters."
+            )),
+            ("字一色", YakuTileExample(
+                title: "Example hand",
+                groups: ["🀀🀀🀀", "🀁🀁🀁", "🀄︎🀄︎🀄︎", "🀅🀅🀅", "🀆🀆"],
+                accessibilityDescription: "East, South, red dragon, and green dragon triplets; a white dragon pair."
+            )),
+            ("清老頭", YakuTileExample(
+                title: "Example hand",
+                groups: ["🀇🀇🀇", "🀏🀏🀏", "🀐🀐🀐", "🀡🀡🀡", "🀙🀙"],
+                accessibilityDescription: "Triplets of 1 characters, 9 characters, 1 bamboo, and 9 circles; a pair of 1 circles."
+            )),
+            ("緑一色", YakuTileExample(
+                title: "Example hand",
+                groups: ["🀑🀒🀓", "🀑🀒🀓", "🀕🀕🀕", "🀗🀗🀗", "🀅🀅"],
+                accessibilityDescription: "Two 2, 3, 4 bamboo sequences; triplets of 6 and 8 bamboo; a green dragon pair.",
+                isGreen: true
+            )),
+            ("九連宝燈", YakuTileExample(
+                title: "Example completed closed hand",
+                groups: ["🀇🀇🀇", "🀈🀉🀊🀋🀌🀍🀎", "🀏🀏🀏", "🀋"],
+                accessibilityDescription: "Three 1s, 2 through 8, three 9s, and an extra 5, all characters and concealed."
+            )),
+            ("四暗刻", YakuTileExample(
+                title: "Example hand — all triplets concealed; tsumo",
+                groups: ["🀈🀈🀈", "🀔🀔🀔", "🀠🀠🀠", "🀄︎🀄︎🀄︎", "🀀🀀"],
+                accessibilityDescription: "Concealed triplets of 2 characters, 5 bamboo, 8 circles, and red dragons; an East wind pair. Win by self draw to complete a triplet."
+            )),
+            ("国士無双十三面待ち", YakuTileExample(
+                title: "13-tile wait — any terminal or honor completes it",
+                groups: ["🀇🀏", "🀐🀘", "🀙🀡", "🀀🀁🀂🀃", "🀄︎🀅🀆"],
+                accessibilityDescription: "Waiting hand: one of every terminal and honor. Any of these thirteen tiles completes the pair."
+            )),
+            ("純正九連宝燈", YakuTileExample(
+                title: "13-tile closed wait — any 1–9 in this suit",
+                groups: ["🀇🀇🀇", "🀈🀉🀊🀋🀌🀍🀎", "🀏🀏🀏"],
+                accessibilityDescription: "Waiting hand: three 1s, one each of 2 through 8, and three 9s of characters. Any character tile completes the hand."
+            )),
+            ("大四喜", YakuTileExample(
+                title: "Example hand",
+                groups: ["🀀🀀🀀", "🀁🀁🀁", "🀂🀂🀂", "🀃🀃🀃", "🀋🀋"],
+                accessibilityDescription: "Triplets of all four winds and a pair of 5 characters."
+            )),
+            ("大七星", YakuTileExample(
+                title: "Example closed hand",
+                groups: ["🀀🀀", "🀁🀁", "🀂🀂", "🀃🀃", "🀄︎🀄︎", "🀅🀅", "🀆🀆"],
+                accessibilityDescription: "Pairs of East, South, West, North, red dragons, green dragons, and white dragons."
+            )),
+            ("一盃口", YakuTileExample(
+                title: "Example sequences",
+                groups: ["🀇🀇🀈🀈🀉🀉 = 🀇🀈🀉 🀇🀈🀉"],
+                accessibilityDescription: "Two identical sequences: 1, 2, 3 of characters."
+            )),
+            ("断幺九", YakuTileExample(
+                title: "Example hand",
+                groups: ["🀈🀉🀊", "🀓🀔🀕", "🀚🀚🀚", "🀜🀝🀞", "🀖🀖"],
+                accessibilityDescription: "2, 3, 4 of characters; 4, 5, 6 of bamboo; three 2s of circles; 4, 5, 6 of circles; a pair of 7s of bamboo. No terminals or honors."
+            )),
+            ("役牌", YakuTileExample(
+                title: "Example dragon triplet",
+                groups: ["🀄︎🀄︎🀄︎"],
+                accessibilityDescription: "Three red dragons."
+            )),
+            ("三色同順", YakuTileExample(
+                title: "Example sequences",
+                groups: ["🀇🀈🀉", "🀐🀑🀒", "🀙🀚🀛"],
+                accessibilityDescription: "1, 2, 3 in each of characters, bamboo, and circles."
+            )),
+            ("一気通貫", YakuTileExample(
+                title: "Example sequences",
+                groups: ["🀇🀈🀉", "🀊🀋🀌", "🀍🀎🀏"],
+                accessibilityDescription: "1, 2, 3; 4, 5, 6; and 7, 8, 9 of characters."
+            )),
+            ("三色同刻", YakuTileExample(
+                title: "Example triplets",
+                groups: ["🀈🀈🀈", "🀑🀑🀑", "🀚🀚🀚"],
+                accessibilityDescription: "Three 2s in each of characters, bamboo, and circles."
+            )),
+            ("七対子", YakuTileExample(
+                title: "Example hand",
+                groups: ["🀇🀇", "🀋🀋", "🀑🀑", "🀕🀕", "🀚🀚", "🀝🀝", "🀆🀆"],
+                accessibilityDescription: "Seven distinct pairs: 1 and 5 of characters, 2 and 6 of bamboo, 2 and 5 of circles, and white dragons."
+            )),
+            ("大三元", YakuTileExample(
+                title: "Example dragon triplets",
+                groups: ["🀄︎🀄︎🀄︎", "🀅🀅🀅", "🀆🀆🀆"],
+                accessibilityDescription: "Three red dragons, three green dragons, and three white dragons."
+            ))
+        ]
+        return examples.first(where: { entry.hasPrefix($0.prefix + " ") || entry.hasPrefix($0.prefix + "（") })?.example
+    }
+}

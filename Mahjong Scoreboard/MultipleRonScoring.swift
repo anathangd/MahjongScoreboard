@@ -16,7 +16,8 @@ enum MultipleRonScoring {
         players: [Player],
         selectedLoser: String?,
         honbaCount: Int,
-        riichiPot: Int
+        riichiPot: Int,
+        threePlayerMode: Bool = false
     ) -> MultipleRonBreakdown? {
         guard let loserWind = selectedLoser, !loserWind.isEmpty,
               let loserIndex = players.firstIndex(where: { $0.wind == loserWind }) else {
@@ -32,31 +33,21 @@ enum MultipleRonScoring {
         var honbaCountWillIncrease = false
 
         for i in winnerIndices {
-            let paraHan = players[i].han
-            let paraFu = players[i].fu
-
-            var points: Int
-            if paraHan == 26 {
-                points = 32000 * 2
-            } else {
-                let base = HandScoring.calculateBasePoints(fu: paraFu, han: paraHan)
-                let pointMultiplier = (players[i].wind == "東") ? 6 : 4
-                points = Int(ceil(Double(base * pointMultiplier) / 100.0) * 100.0)
-            }
+            winnerPointsByIndex[i] = HandScoring.calculateRon(
+                winnerWind: players[i].wind,
+                han: players[i].han,
+                fu: players[i].fu,
+                honbaCount: honbaCount,
+                threePlayerMode: threePlayerMode
+            ).winnerPoints
 
             if players[i].wind == "東" {
                 honbaCountWillIncrease = true
             }
-
-            if players[i].wind == "東" && points < 1200 {
-                points = 1200
-            } else if players[i].wind != "東" && points < 1000 {
-                points = 1000
-            }
-
-            points += 300 * honbaCount
-            winnerPointsByIndex[i] = points
         }
+
+        // The riichi pot supplements winnings; it is not paid again by the discarder.
+        let paymentsByIndex = winnerPointsByIndex
 
         if riichiPot > 0 {
             let winnerCount = winnerIndices.count
@@ -79,9 +70,14 @@ enum MultipleRonScoring {
         let clockwiseOrder = (1...3).map { (loserIndex + $0) % players.count }
         let orderedWinnerIndices = clockwiseOrder.filter { winnerIndices.contains($0) }
         let orderedWinnerWinds = orderedWinnerIndices.map { players[$0].wind }
-        let totalLoss = orderedWinnerIndices.reduce(0) { $0 + winnerPointsByIndex[$1] }
-        let summaryLines = orderedWinnerIndices.map {
-            "\(loserWind) pays \(players[$0].wind): \(winnerPointsByIndex[$0])"
+        let totalLoss = orderedWinnerIndices.reduce(0) { $0 + paymentsByIndex[$1] }
+        let summaryLines = orderedWinnerIndices.flatMap { i -> [String] in
+            var lines = ["\(loserWind) pays \(players[i].wind): \(paymentsByIndex[i])"]
+            let potShare = winnerPointsByIndex[i] - paymentsByIndex[i]
+            if potShare > 0 {
+                lines.append("\(players[i].wind) receives \(potShare) from the riichi pot")
+            }
+            return lines
         }
 
         return MultipleRonBreakdown(

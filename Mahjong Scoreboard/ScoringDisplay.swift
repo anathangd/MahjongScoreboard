@@ -22,6 +22,7 @@ struct ScoringDisplay: View {
     let multiplier: Int
     let winnerPoints: Int
     let threePlayerMode: Bool
+    let bisectNorth: Bool
     let multipleRonTitle: String?
     let multipleRonSummaryLines: [String]
     let multipleRonTotalPaid: Int
@@ -74,242 +75,206 @@ struct ScoringDisplay: View {
         return "Han: \(han), Fu: \(fu)"
     }
 
-    var body: some View {
-        ZStack {
-            Rectangle()
-                .ignoresSafeArea()
-                .foregroundColor(.black)
-                .opacity(0.8)
-            VStack {
-                Text(titleText)
-                    .font(.system(size: 50))
-                    .padding()
-
-                if isMultipleRon {
-                    VStack(alignment: .leading, spacing: 6) {
-                        ForEach(multipleRonSummaryLines, id: \.self) { line in
-                            Text(line)
-                                .font(.largeTitle)
-                        }
-                    }
-                    .font(.title2)
-                    .padding(.top, 6)
-
-                    VStack {
-                        Text("Total paid:")
-                        Text("\(multipleRonTotalPaid)")
-                    }
-                    .font(.largeTitle)
-                    .padding(.top, 8)
-
-                    if multipleRonHonbaIncreases {
-                        Text("Honba increases by 1")
-                            .font(.title2)
-                            .padding(.top, 6)
-                    }
-                }
-
-                if wasTsumo {
-                    if winner == "東" {
-                        VStack {
-                            Text("Each player pays: ")
-                            Text("\(String(format: "%d", nonDealerPayment))")
-                        }
-                        .font(.largeTitle)
-                        .padding()
-                        Text(displayedHanFuText)
-                        if han == 26 {
-                            VStack {
-                                Text("Double yakuman base points: 16000")
-                                Text("Dealer tsumo payment: 16000 * 2 = 32000")
-                                Text("Honba points: \(honbaCount) * 100 = \(honbaCount * 100)")
-                                Text("Payout: 32000 + \(honbaCount * 100) = \(String(format: "%d", nonDealerPayment))")
-                            }
-                        } else if isLimitHand {
-                            VStack {
-                                Text("\(limitName ?? "Limit hand") base points: \(String(format: "%d", basePoints))")
-                                Text("Dealer base point multiplier: 2")
-                                Text("\(String(format: "%d", basePoints)) * 2 = \(String(format: "%d", nonDealerPayment))")
-                                Text("Honba points: \(honbaCount) * 100 = \(honbaCount * 100)")
-                                Text("Payout: \(String(format: "%d", nonDealerPayment - honbaCount * 100)) + \(honbaCount * 100) = \(String(format: "%d", nonDealerPayment))")
-                            }
-                        } else {
-                            HStack(spacing: 2) {
-                                Text("Base points = \(String(format: "%d", fu)) fu * 2")
-                                Text("2 + \(String(format: "%d", han)) han")
-                                    .font(.system(size: 12))
-                                    .baselineOffset(8)
-                                Text(" = \(String(format: "%d", fu * Int(pow(2.0, Double(2 + han)))))")
-                            }
-                        }
-                    } else {
-                        VStack {
-                            Text("東 pays:")
-                            Text("\(String(format: "%d", dealerPayment))")
-                        }
-                        .font(.largeTitle)
-                        .padding()
-                        VStack {
-                            if han == 26 {
-                                Text("Double yakuman base points: 16000")
-                                Text("Dealer tsumo payment: 16000 * 2 = 32000")
-                                Text("Honba points: \(String(format: "%d", honbaCount)) * 100 = \(String(format: "%d", honbaCount * 100))")
-                                Text("Payout: 32000 + \(String(format: "%d", honbaCount * 100)) = \(String(format: "%d", dealerPayment))")
-                            } else if isLimitHand {
-                                Text(displayedHanFuText)
-                                Text("\(limitName ?? "Limit hand") base points: \(String(format: "%d", basePoints))")
-                                Text("Dealer base point multiplier: 2")
-                                Text("\(String(format: "%d", basePoints)) * 2 = \(String(format: "%d", dealerPayment))")
-                                Text("Honba points: \(String(format: "%d", honbaCount)) * 100 = \(String(format: "%d", honbaCount * 100))")
-                                Text("Payout: \(String(format: "%d", dealerPayment - honbaCount * 100)) + \(String(format: "%d", honbaCount * 100)) = \(String(format: "%d", dealerPayment))")
-                            } else {
-                                Text("Han: \(han), Fu: \(fu)")
-                                HStack(spacing: 2) {
-                                    Text("Base points = \(String(format: "%d", fu)) fu * 2")
-                                    Text("2 + \(String(format: "%d", han)) han")
-                                        .font(.system(size: 12))
-                                        .baselineOffset(8)
-                                    Text(" = \(String(format: "%d", fu * Int(pow(2.0, Double(2 + han)))))")
-                                }
-                                Text("Dealer base point multiplier: 2")
-                                Text("\(String(format: "%d", basePoints)) * 2 = \(String(format: "%d", basePoints * 2))")
-                                Text("Rounded up to the nearest hundred: \(String(format: "%d", Int(ceil(Double(basePoints * 2) / 100.0) * 100.0)))")
-                                Text("Honba points: \(String(format: "%d", honbaCount)) * 100 = \(String(format: "%d", honbaCount * 100))")
-                                Text("Payout: \(String(format: "%d", Int(ceil(Double(basePoints * 2) / 100.0) * 100.0))) + \(String(format: "%d", honbaCount * 100)) = \(String(format: "%d", dealerPayment))")
-                            }
-                        }
-                        VStack {
-                            Text("Non-dealers pay:")
-                            Text("\(String(format: "%d", nonDealerPayment))")
-                        }
-                        .font(.largeTitle)
-                        .padding()
-                    }
-                    VStack {
-                        if han != 26 {
-                            if isLimitHand {
-                                if winner == "東" {
-                                    // Text("\(limitName ?? "Limit hand") base points: \(String(format: "%d", basePoints))")
-                                } else {
-                                    Text("\(limitName ?? "Limit hand") base points: \(String(format: "%d", basePoints))")
-                                }
-                            } else if winner == "東" {
-                                Text("Base point multiplier: 2")
-                            } else {
-                                Text("Non-dealer base point multiplier: 1")
-                            }
-                            if isLimitHand {
-                                if winner == "東" && han != 26 {
-                                    // Text("Payout: \(String(format: "%d", nonDealerPayment - honbaCount * 100)) + \(String(format: "%d", honbaCount * 100)) = \(String(format: "%d", nonDealerPayment))")
-                                } else {
-                                    Text("Non-dealer payout: \(String(format: "%d", nonDealerPayment - honbaCount * 100)) + \(String(format: "%d", honbaCount * 100)) = \(String(format: "%d", nonDealerPayment))")
-                                }
-                            } else if winner == "東" {
-                                
-                                Text("\(String(format: "%d", basePoints)) * 2 = \(String(format: "%d", basePoints * 2))")
-                                Text("Rounded up to the nearest hundred: \(String(format: "%d", Int(ceil(Double(basePoints * 2) / 100.0) * 100.0)))")
-                                Text("Honba points: \(String(format: "%d", honbaCount)) * 100 = \(String(format: "%d", honbaCount * 100))")
-                                Text("Payout: \(String(format: "%d", Int(ceil(Double(basePoints * 2) / 100.0) * 100.0))) + \(String(format: "%d", honbaCount * 100)) = \(String(format: "%d", nonDealerPayment))")
-                                
-                            } else {
-                                Text("\(String(format: "%d", basePoints)) * 1 = \(String(format: "%d", basePoints * 1))")
-                                Text("Rounded up to the nearest hundred: \(String(format: "%d", Int(ceil(Double(basePoints * 1) / 100.0) * 100.0)))")
-                                Text("Non-dealer payout: \(String(format: "%d", Int(ceil(Double(basePoints * 1) / 100.0) * 100.0))) * 1 + \(String(format: "%d", honbaCount * 100)) = \(String(format: "%d", nonDealerPayment))")
-                            }
-                        }
-                    }
-                    VStack {
-                        Text("Total winnings:")
-                        if winner == "東" {
-                            Text("\(String(format: "%d", nonDealerPayment * dealerTsumoPayerCount + riichiPot))")
-                        } else {
-                            Text("\(String(format: "%d", dealerPayment + (nonDealerPayment * nonDealerTsumoPayerCount) + riichiPot))")
-                        }
-                    }
-                    .padding()
-                    .font(.largeTitle)
-                    VStack {
-                        if winner == "東" {
-                            Text("Payout: \(String(format: "%d", nonDealerPayment)) * \(dealerTsumoPayerCount) = \(String(format: "%d", nonDealerPayment * dealerTsumoPayerCount))")
-                        } else {
-                            Text("Payout: \(String(format: "%d", dealerPayment)) + \(String(format: "%d", nonDealerPayment)) * \(nonDealerTsumoPayerCount) = \(String(format: "%d", dealerPayment + nonDealerPayment * nonDealerTsumoPayerCount))")
-                        }
-                        if riichiPot > 0 {
-                            Text("Riichi pot: \(String(format: "%d", riichiPot))")
-                            if winner == "東" {
-                                Text("\(String(format: "%d", nonDealerPayment * dealerTsumoPayerCount)) + \(String(format: "%d", riichiPot)) = \(String(format: "%d", nonDealerPayment * dealerTsumoPayerCount + riichiPot))")
-                            } else {
-                                Text("\(String(format: "%d", dealerPayment + nonDealerPayment * nonDealerTsumoPayerCount)) + \(String(format: "%d", riichiPot)) = \(String(format: "%d", dealerPayment + nonDealerPayment * nonDealerTsumoPayerCount + riichiPot))")
-                            }
-                        }
-                        
-                    }
-                }
-                
-                if wasRon {
-                    VStack {
-                        Text("\(loser) pays:")
-                        Text("\(String(format: "%d", winnerPoints))")
-                    }
-                    .font(.largeTitle)
-                    .padding()
-                    VStack {
-                        Text(displayedHanFuText)
-                        if han == 26 {
-                            Text("Honba points: \(honbaCount) * 300 = \(honbaCount * 300)")
-                            Text("Payout: \(String(format: "%d", winnerPoints - honbaCount * 300)) + \(honbaCount * 300) = \(String(format: "%d", winnerPoints))")
-                        } else if isLimitHand {
-                            Text("\(limitName ?? "Limit hand") base points: \(String(format: "%d", basePoints))")
-                            Text("Base point multiplier: \(multiplier) (\(winner == "東" ? "dealer" : "non-dealer"))")
-                            Text("\(String(format: "%d", basePoints)) * \(multiplier) = \(String(format: "%d", basePoints * multiplier))")
-                            Text("Honba points: \(honbaCount) * 300 = \(honbaCount * 300)")
-                            Text("Payout: \(String(format: "%d", winnerPoints - honbaCount * 300)) + \(honbaCount * 300) = \(String(format: "%d", winnerPoints))")
-                        } else {
-                            HStack(spacing: 2) {
-                                Text("Base points = \(fu) fu * 2")
-                                Text("2 + \(han) han")
-                                    .font(.system(size: 12))
-                                    .baselineOffset(8)
-                                Text(" = \(String(format: "%d", fu * Int(pow(2.0, Double(2 + han)))))")
-                            }
-                            Text("Base point multiplier: \(multiplier) (\(winner == "東" ? "dealer" : "non-dealer"))")
-                            Text("\(String(format: "%d", basePoints)) * \(multiplier) = \(String(format: "%d", basePoints * multiplier))")
-                            Text("Rounded up the nearest hundred or minimum: \(String(format: "%d", winnerPoints - honbaCount * 300))")
-                            Text("Honba points: \(honbaCount) * 300 = \(honbaCount * 300)")
-                            Text("Payout: \(String(format: "%d", (winnerPoints - honbaCount * 300))) + \(honbaCount * 300) = \(String(format: "%d", winnerPoints))")
-                        }
-                    }
-                    VStack {
-                        Text("Total winnings:")
-                        Text("\(String(format: "%d", winnerPoints + riichiPot))")
-                    }
-                    .padding()
-                    .font(.largeTitle)
-                    VStack {
-                        Text("Payout: \(String(format: "%d", winnerPoints))")
-                        Text("Riichi pot: \(String(format: "%d", riichiPot))")
-                        Text("\(String(format: "%d", winnerPoints)) + \(String(format: "%d", riichiPot)) = \(String(format: "%d", winnerPoints + riichiPot))")
-                        
-                    }
-                }
-                
-                if winner == "東" {
-                    Text("Honba increases by 1")
-                        .font(.title2)
-                        .padding()
+    private func tsumoDetails(_ standardScore: TsumoScoreBreakdown) -> some View {
+        let scoringBase = han == 26 ? 16000 : standardScore.basePoints
+        return VStack(spacing: 6) {
+            Text(displayedHanFuText)
+            if isLimitHand {
+                Text("\(limitName ?? "Limit hand") base points: \(scoringBase)")
+            } else {
+                let rawBase = fu * Int(pow(2.0, Double(2 + han)))
+                Text("Base points = \(fu) fu × 2^(2 + \(han)) = \(rawBase)")
+                if rawBase > scoringBase {
+                    Text("Base points capped at \(scoringBase) (Mangan)")
                 }
             }
-            .foregroundStyle(.white)
-            Color.clear
-                .contentShape(Rectangle())
+            Text("Honba per active opponent: \(honbaCount) × 100 = \(honbaCount * 100)")
+            if winner == "東" {
+                originalTsumoPaymentDetails(
+                    title: "Each active non-dealer",
+                    base: scoringBase,
+                    multiplier: 2,
+                    payment: standardScore.nonDealerPayment
+                )
+            } else {
+                originalTsumoPaymentDetails(
+                    title: "Dealer",
+                    base: scoringBase,
+                    multiplier: 2,
+                    payment: standardScore.dealerPayment
+                )
+                originalTsumoPaymentDetails(
+                    title: "Active non-dealer",
+                    base: scoringBase,
+                    multiplier: 1,
+                    payment: standardScore.nonDealerPayment
+                )
+            }
+        }
+    }
+
+    private func originalTsumoPaymentDetails(title: String, base: Int, multiplier: Int, payment: Int) -> some View {
+        let beforeHonba = payment - honbaCount * 100
+        return VStack(spacing: 4) {
+            Text(title)
+                .fontWeight(.semibold)
+            Text("Base point multiplier: \(multiplier)")
+            Text("\(base) × \(multiplier) = \(base * multiplier)")
+            Text("Rounded up to the nearest 100 or minimum: \(beforeHonba)")
+            Text("\(threePlayerMode && bisectNorth ? "Before North bisection" : "Payment"): \(beforeHonba) + \(honbaCount * 100) = \(payment)")
+        }
+        .padding(.top, 6)
+    }
+
+    private var tsumoTotal: Int {
+        winner == "東"
+            ? nonDealerPayment * dealerTsumoPayerCount
+            : dealerPayment + nonDealerPayment * nonDealerTsumoPayerCount
+    }
+
+    @ViewBuilder
+    private var paymentSummary: some View {
+        if wasTsumo {
+            if winner == "東" {
+                Text("Each player pays: \(nonDealerPayment)")
+            } else {
+                Text("東 pays: \(dealerPayment)")
+                Text("Non-dealer\(nonDealerTsumoPayerCount == 1 ? "" : "s") pay\(nonDealerTsumoPayerCount == 1 ? "s" : ""): \(nonDealerPayment)")
+            }
+        } else if wasRon {
+            Text("\(loser) pays: \(winnerPoints)")
+        }
+    }
+
+    private var ronDetails: some View {
+        let scoringBase = han == 26 ? 16000 : basePoints
+        let honbaValue = threePlayerMode ? 200 : 300
+        return VStack(spacing: 6) {
+            Text(displayedHanFuText)
+            if isLimitHand {
+                Text("\(limitName ?? "Limit hand") base points: \(scoringBase)")
+            } else {
+                let rawBase = fu * Int(pow(2.0, Double(2 + han)))
+                Text("Base points = \(fu) fu × 2^(2 + \(han)) = \(rawBase)")
+                if rawBase > scoringBase {
+                    Text("Base points capped at \(scoringBase) (Mangan)")
+                }
+            }
+            Text("Base point multiplier: \(multiplier) (\(winner == "東" ? "dealer" : "non-dealer"))")
+            Text("\(scoringBase) × \(multiplier) = \(scoringBase * multiplier)")
+            Text("Rounded up to the nearest 100 or minimum: \(winnerPoints - honbaCount * honbaValue)")
+            Text("Honba points: \(honbaCount) × \(honbaValue) = \(honbaCount * honbaValue)")
+            Text("Payout: \(winnerPoints - honbaCount * honbaValue) + \(honbaCount * honbaValue) = \(winnerPoints)")
+            Text("Riichi pot: \(riichiPot)")
+            Text("\(winnerPoints) + \(riichiPot) = \(winnerPoints + riichiPot)")
+        }
+    }
+
+    @ViewBuilder
+    private var scoringDetails: some View {
+        if isMultipleRon {
+            ForEach(multipleRonSummaryLines, id: \.self) { line in
+                Text(line)
+            }
+        } else if wasTsumo {
+            let standardScore = HandScoring.calculateTsumo(
+                winnerWind: winner,
+                han: han,
+                fu: fu,
+                honbaCount: honbaCount,
+                threePlayerMode: false
+            )
+            tsumoDetails(standardScore)
+            if threePlayerMode && bisectNorth {
+                let northPayment = standardScore.nonDealerPayment - honbaCount * 100
+                let northShare = nonDealerPayment - standardScore.nonDealerPayment
+                VStack(spacing: 6) {
+                    Text("North's payment (no honba): \(northPayment)")
+                    Text("Half of North's payment: \(northPayment) / 2 = \(northPayment / 2)")
+                    Text("Rounded up to the next 100: \(northShare)")
+                    if winner == "東" {
+                        Text("Each player pays: \(standardScore.nonDealerPayment) + \(northShare) = \(nonDealerPayment)")
+                    } else {
+                        Text("東 pays: \(standardScore.dealerPayment) + \(northShare) = \(dealerPayment)")
+                        Text("Non-dealer pays: \(standardScore.nonDealerPayment) + \(northShare) = \(nonDealerPayment)")
+                    }
+                }
+                .padding(.top, 12)
+            }
+            VStack(spacing: 6) {
+                if winner == "東" {
+                    Text("Payout: \(nonDealerPayment) × \(dealerTsumoPayerCount) = \(tsumoTotal)")
+                } else {
+                    Text("Payout: \(dealerPayment) + \(nonDealerPayment) × \(nonDealerTsumoPayerCount) = \(tsumoTotal)")
+                }
+                Text("Riichi pot: \(riichiPot)")
+                Text("\(tsumoTotal) + \(riichiPot) = \(tsumoTotal + riichiPot)")
+            }
+            .padding(.top, 12)
+        } else if wasRon {
+            ronDetails
+        }
+    }
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.8)
                 .ignoresSafeArea()
                 .onTapGesture {
                     onDismiss()
                 }
+            VStack(spacing: 12) {
+                Text(titleText)
+                    .font(.system(size: 50))
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
+
+                VStack(spacing: 8) {
+                    paymentSummary
+                }
+                .font(.largeTitle)
+                .fixedSize(horizontal: false, vertical: true)
+                .layoutPriority(1)
+
+                ScrollView(.vertical) {
+                    VStack(spacing: 8) {
+                        scoringDetails
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                }
+                .scrollBounceBehavior(.basedOnSize)
+                .fixedSize(horizontal: false, vertical: true)
+
+                VStack(spacing: 8) {
+                    if isMultipleRon {
+                        Text("Total paid: \(multipleRonTotalPaid)")
+                    } else if wasTsumo {
+                        Text("Total winnings: \(tsumoTotal + riichiPot)")
+                    } else if wasRon {
+                        Text("Total winnings: \(winnerPoints + riichiPot)")
+                    }
+                }
+                .font(.largeTitle)
+                .fixedSize(horizontal: false, vertical: true)
+                .layoutPriority(1)
+
+                if (isMultipleRon && multipleRonHonbaIncreases) || (!isMultipleRon && winner == "東") {
+                    Text("Honba increases by 1")
+                        .font(.title2)
+                }
+            }
+            .padding()
+            .multilineTextAlignment(.center)
+            .foregroundStyle(.white)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                onDismiss()
+            }
         }
     }
 }
 
 #Preview {
-    ScoringDisplay(winner: "東", wasTsumo: false, wasRon: true, han: 1, fu: 20, honbaCount: 1, basePoints: 160, nonDealerPayment: 800, riichiPot: 1000, dealerPayment: 1300, loser: "西", multiplier: 6, winnerPoints: 1500, threePlayerMode: false, multipleRonTitle: nil, multipleRonSummaryLines: [], multipleRonTotalPaid: 0, multipleRonHonbaIncreases: false, onDismiss: {})
+    ScoringDisplay(winner: "東", wasTsumo: false, wasRon: true, han: 1, fu: 20, honbaCount: 1, basePoints: 160, nonDealerPayment: 800, riichiPot: 1000, dealerPayment: 1300, loser: "西", multiplier: 6, winnerPoints: 1500, threePlayerMode: false, bisectNorth: false, multipleRonTitle: nil, multipleRonSummaryLines: [], multipleRonTotalPaid: 0, multipleRonHonbaIncreases: false, onDismiss: {})
 }

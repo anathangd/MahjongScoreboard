@@ -185,11 +185,13 @@ enum ScoreApplication {
             updatedPlayers[i].riichi = false
         }
 
-        let dealerIsTenpai = updatedPlayers.contains { $0.wind == "東" && $0.tenpai }
-        let nextHonbaCount = dealerIsTenpai ? (honbaCount + 1) : 0
+        let nextHonbaCount = tenpaiCount > 0 ? (honbaCount + 1) : 0
         let noPayouts = (threePlayerMode && (tenpaiCount == 0 || tenpaiCount == 3)) || (!threePlayerMode && (tenpaiCount == 0 || tenpaiCount == 4))
 
         if noPayouts {
+            for i in updatedPlayers.indices {
+                updatedPlayers[i].tenpai = false
+            }
             return ScoreApplicationPlan(
                 players: updatedPlayers,
                 winningPointsByIndex: winningPointsByIndex,

@@ -39,8 +39,30 @@ enum HandScoring {
         han: Int,
         fu: Int,
         honbaCount: Int,
-        threePlayerMode: Bool
+        threePlayerMode: Bool,
+        bisectNorth: Bool = false
     ) -> TsumoScoreBreakdown {
+        if threePlayerMode && bisectNorth {
+            let fourPlayerScore = calculateTsumo(
+                winnerWind: winnerWind,
+                han: han,
+                fu: fu,
+                honbaCount: honbaCount,
+                threePlayerMode: false
+            )
+            // North contributes no honba; round each half of the hand payment up to 100.
+            let northPayment = fourPlayerScore.nonDealerPayment - 100 * honbaCount
+            let northPaymentShare = ((northPayment + 199) / 200) * 100
+            let nonDealerPayment = fourPlayerScore.nonDealerPayment + northPaymentShare
+            let dealerPayment = winnerWind == "東" ? 0 : fourPlayerScore.dealerPayment + northPaymentShare
+            return TsumoScoreBreakdown(
+                basePoints: fourPlayerScore.basePoints,
+                winnerPoints: winnerWind == "東" ? nonDealerPayment * 2 : dealerPayment + nonDealerPayment,
+                dealerPayment: dealerPayment,
+                nonDealerPayment: nonDealerPayment
+            )
+        }
+
         if han == 26 {
             let basePoints = 16000
 
@@ -107,7 +129,8 @@ enum HandScoring {
         winnerWind: String,
         han: Int,
         fu: Int,
-        honbaCount: Int
+        honbaCount: Int,
+        threePlayerMode: Bool = false
     ) -> RonScoreBreakdown {
         if han == 26 {
             let singleYakumanPoints = 32000
@@ -117,7 +140,7 @@ enum HandScoring {
                 winnerPoints = Int(Double(winnerPoints) * 1.5)
             }
 
-            winnerPoints += 300 * honbaCount
+            winnerPoints += (threePlayerMode ? 200 : 300) * honbaCount
             return RonScoreBreakdown(
                 basePoints: 0,
                 winnerPoints: winnerPoints,
@@ -135,7 +158,7 @@ enum HandScoring {
             if winnerPoints < 1000 { winnerPoints = 1000 }
         }
 
-        winnerPoints += 300 * honbaCount
+        winnerPoints += (threePlayerMode ? 200 : 300) * honbaCount
 
         return RonScoreBreakdown(
             basePoints: basePoints,

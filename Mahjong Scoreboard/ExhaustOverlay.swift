@@ -43,6 +43,7 @@ struct ExhaustOverlay: View {
                         }
                     }
                     .opacity(threePlayerMode ? 0 : 1)
+                    .allowsHitTesting(!threePlayerMode)
                 Spacer()
                 TenpaiButton(player: playerList[1], tenpai: playerList[1].tenpai)
                     .rotationEffect(.degrees(-90))

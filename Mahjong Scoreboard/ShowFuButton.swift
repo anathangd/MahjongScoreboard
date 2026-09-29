@@ -16,45 +16,42 @@ struct ShowFuButton: View {
     @Binding var han: Int
     @State var justToggled = false
     var body: some View {
-        VStack {
-            HStack {
-                Spacer()
-                Button {
-                    if !justToggled {
-                        showFu = true
-                    }
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill((ron || tsumo) ? Color.black : Color.clear)
-                            .contentShape(Circle())
-                            .frame(height: 40)
-                        Text("符")
-                            .font(.title2)
-                            .foregroundStyle(
-                                (!calculateFu || han >= 5)
-                                ? Color.gray
-                                : ((ron || tsumo) && calculateFu
-                                   ? Color.cyan
-                                   : Color.black)
-                            )
-                    }
-                }
-                .disabled(timerOn ? true : false)
-                .simultaneousGesture(
-                    LongPressGesture(minimumDuration: 0.5)
-                        .onEnded { _ in
-                            calculateFu.toggle()
-                            justToggled = true
-                            // small delay so it doesn't open the fu screen
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                justToggled = false
-                            }
-                        }
-                )
-                .sensoryFeedback(.success, trigger: calculateFu)
-            }
+        HStack {
             Spacer()
+            Button {
+                if !justToggled {
+                    showFu = true
+                }
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill((ron || tsumo) ? Color.black : Color.clear)
+                        .contentShape(Circle())
+                        .frame(height: 40)
+                    Text("符")
+                        .font(.title2)
+                        .foregroundStyle(
+                            (!calculateFu || han >= 5)
+                            ? Color.gray
+                            : ((ron || tsumo) && calculateFu
+                               ? Color.cyan
+                               : Color.black)
+                        )
+                }
+            }
+            .disabled(timerOn ? true : false)
+            .simultaneousGesture(
+                LongPressGesture(minimumDuration: 0.5)
+                    .onEnded { _ in
+                        calculateFu.toggle()
+                        justToggled = true
+                        // small delay so it doesn't open the fu screen
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            justToggled = false
+                        }
+                    }
+            )
+            .sensoryFeedback(.success, trigger: calculateFu)
         }
     }
 }

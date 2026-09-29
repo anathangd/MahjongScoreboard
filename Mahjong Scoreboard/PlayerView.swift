@@ -17,6 +17,7 @@ struct PlayerView: View {
     @Binding var player: Player
     let isVertical: Bool
     let timerOn: Bool
+    let scoresAreChanging: Bool
     let playerDisabled: Bool
     let menuActionsReversed: Bool
     @Binding var showKanji: Bool
@@ -75,7 +76,7 @@ struct PlayerView: View {
                         )
                     }
                 } else {
-                    Text("一 二 三 四 五 六 七 八 九")
+                    Text("一 二 三 四 伍 六 七 八 九")
                         .font(.system(size: 20))
                         .opacity(showKanji ? 1 : 0)
                 }
@@ -103,7 +104,7 @@ struct PlayerView: View {
                     .glassEffect(.identity)
             }
             .foregroundStyle(playerDisabled ? .black : .blue)
-            .disabled(playerDisabled || timerOn)
+            .disabled(playerDisabled || timerOn || scoresAreChanging)
         }
     }
 
@@ -121,6 +122,7 @@ struct PlayerView: View {
         player: $player,
         isVertical: false,
         timerOn: false,
+        scoresAreChanging: false,
         playerDisabled: false,
         menuActionsReversed: false,
         showKanji: $showKanji,

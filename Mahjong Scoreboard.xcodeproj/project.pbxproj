@@ -35,6 +35,7 @@
 		44A288492E6FB5AF008C2AFA /* ShowFuButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A288482E6FB5AF008C2AFA /* ShowFuButton.swift */; };
 		44A2884B2E6FB673008C2AFA /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A2884A2E6FB673008C2AFA /* AudioManager.swift */; };
 		44A2884D2E6FBC4E008C2AFA /* ScoreChangeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A2884C2E6FBC4E008C2AFA /* ScoreChangeView.swift */; };
+		44D9152E306B914C00F77171 /* NorthBisectionButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D9152D306B914C00F77171 /* NorthBisectionButton.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -68,6 +69,7 @@
 		44A288482E6FB5AF008C2AFA /* ShowFuButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowFuButton.swift; sourceTree = "<group>"; };
 		44A2884A2E6FB673008C2AFA /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
 		44A2884C2E6FBC4E008C2AFA /* ScoreChangeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreChangeView.swift; sourceTree = "<group>"; };
+		44D9152D306B914C00F77171 /* NorthBisectionButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NorthBisectionButton.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -119,6 +121,7 @@
 				44A2884C2E6FBC4E008C2AFA /* ScoreChangeView.swift */,
 				440522952E5C803200305437 /* ScoringDisplay.swift */,
 				44A288482E6FB5AF008C2AFA /* ShowFuButton.swift */,
+				44D9152D306B914C00F77171 /* NorthBisectionButton.swift */,
 				446029B32F8A1DB1009336C8 /* ShowFuOverlay.swift */,
 				446029B52F8A1E7B009336C8 /* ShowNamesOverlay.swift */,
 				441D8ED32AACD0CC00F5FE53 /* TenpaiButton.swift */,
@@ -218,6 +221,7 @@
 				446029AC2F8A118A009336C8 /* ScoreApplication.swift in Sources */,
 				441D8ED22AAC8DFF00F5FE53 /* Player.swift in Sources */,
 				44A2884D2E6FBC4E008C2AFA /* ScoreChangeView.swift in Sources */,
+				44D9152E306B914C00F77171 /* NorthBisectionButton.swift in Sources */,
 				441D8ED62AACE06500F5FE53 /* RiichiButton.swift in Sources */,
 				446029B62F8A1E7B009336C8 /* ShowNamesOverlay.swift in Sources */,
 				446029B22F8A1BC6009336C8 /* MultipleRonOverlay.swift in Sources */,
@@ -369,7 +373,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Riichi Score";
@@ -385,7 +389,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NathanDavis.Mahjong-Scoreboard";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -404,7 +408,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Riichi Score";
@@ -420,7 +424,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NathanDavis.Mahjong-Scoreboard";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

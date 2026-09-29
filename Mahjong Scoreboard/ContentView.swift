@@ -134,8 +134,14 @@ struct ContentView: View {
     @State private var multipleRonHonbaIncreases = false
     @State private var multipleRonWinnersTitle = ""
     
+    @State private var bisectNorth: Bool = false
+    
     let isPreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
     
+    private var scoresAreChanging: Bool {
+        downScoreChange || upScoreChange || leftScoreChange || rightScoreChange
+    }
+
     var canSubmitMultipleRon: Bool {
         let winnerCount = playerList.filter { $0.multRonWin }.count
         let invalidCombo = playerList.contains { $0.multRonWin && $0.wind == selectedLoser }
@@ -161,8 +167,12 @@ struct ContentView: View {
                 }
             }
             
-            //show fu button
-            ShowFuButton(showFu: $showFu, timerOn: $timerOn, ron: $ron, tsumo: $tsumo, calculateFu: $calculateFu, han: $han)
+            //show fu and bisect north buttons
+            VStack (spacing: 2) {
+                ShowFuButton(showFu: $showFu, timerOn: $timerOn, ron: $ron, tsumo: $tsumo, calculateFu: $calculateFu, han: $han)
+                Spacer()
+            }
+            
             
             //menu buttons
             GlassEffectContainer {
@@ -233,6 +243,7 @@ struct ContentView: View {
                     player: $playerList[2],
                     isVertical: false,
                     timerOn: timerOn,
+                    scoresAreChanging: scoresAreChanging,
                     playerDisabled: false,
                     menuActionsReversed: false,
                     showKanji: $showTopKanji,
@@ -274,6 +285,7 @@ struct ContentView: View {
                     player: $playerList[0],
                     isVertical: false,
                     timerOn: timerOn,
+                    scoresAreChanging: scoresAreChanging,
                     playerDisabled: false,
                     menuActionsReversed: true,
                     showKanji: $showBottomKanji,
@@ -313,6 +325,7 @@ struct ContentView: View {
                     player: $playerList[3],
                     isVertical: true,
                     timerOn: timerOn,
+                    scoresAreChanging: scoresAreChanging,
                     playerDisabled: threePlayerMode,
                     menuActionsReversed: false,
                     showKanji: $showLeftKanji,
@@ -353,6 +366,7 @@ struct ContentView: View {
                     player: $playerList[1],
                     isVertical: true,
                     timerOn: timerOn,
+                    scoresAreChanging: scoresAreChanging,
                     playerDisabled: false,
                     menuActionsReversed: true,
                     showKanji: $showRightKanji,
@@ -431,7 +445,8 @@ struct ContentView: View {
                 showHonbaInfo: $showHonbaInfo,
                 riichiPotIndicator: riichiPotIndicator,
                 honbaCount: honbaCount,
-                riichiPot: riichiPot
+                riichiPot: riichiPot,
+                threePlayerMode: threePlayerMode
             )
             
             if timerOn {
@@ -485,6 +500,7 @@ struct ContentView: View {
                         fu = 20
                         for i in playerList.indices {
                             playerList[i].winner = false
+                            playerList[i].loser = false
                         }
                     }
                 )
@@ -516,7 +532,13 @@ struct ContentView: View {
             
             // overlaid fu button and display scoring
             if ron || tsumo {
-                ShowFuButton(showFu: $showFu, timerOn: $timerOn, ron: $ron, tsumo: $tsumo, calculateFu: $calculateFu, han: $han)
+                VStack (spacing: 2) {
+                    ShowFuButton(showFu: $showFu, timerOn: $timerOn, ron: $ron, tsumo: $tsumo, calculateFu: $calculateFu, han: $han)
+                    if threePlayerMode {
+                        NorthBisectionButton(bisectNorth: $bisectNorth, ron: $ron, tsumo: $tsumo)
+                    }
+                    Spacer()
+                }
                 Button("display scoring") {
                     displayScoring.toggle()
                 }
@@ -583,6 +605,7 @@ struct ContentView: View {
                     multiplier: multiplier,
                     winnerPoints: winnerPoints,
                     threePlayerMode: threePlayerMode,
+                    bisectNorth: bisectNorth,
                     multipleRonTitle: nil,
                     multipleRonSummaryLines: [],
                     multipleRonTotalPaid: 0,
@@ -629,6 +652,11 @@ struct ContentView: View {
                     },
                     onCancel: {
                         multipleRon = false
+                        for i in playerList.indices {
+                            playerList[i].multRonWin = false
+                            playerList[i].loser = false
+                        }
+                        selectedLoser = nil
                     }
                 )
             }
@@ -649,6 +677,7 @@ struct ContentView: View {
                     multiplier: 0,
                     winnerPoints: 0,
                     threePlayerMode: threePlayerMode,
+                    bisectNorth: bisectNorth,
                     multipleRonTitle: multipleRonWinnersTitle,
                     multipleRonSummaryLines: multipleRonSummaryLines,
                     multipleRonTotalPaid: multipleRonTotalPaid,
@@ -706,6 +735,23 @@ struct ContentView: View {
                                     Text(.init(entry))
                                         .padding(.top, 5)
                                         .padding(.bottom, 5)
+                                    if let example = YakuTileExample.example(for: entry) {
+                                        VStack(alignment: .leading, spacing: 6) {
+                                            Text(example.title)
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                            Text(example.groups.joined(separator: "  "))
+                                                .foregroundStyle(example.isGreen ? Color(red: 0, green: 0.25, blue: 0) : Color.primary)
+                                                .font(.system(size: 30))
+                                                .lineLimit(1)
+                                                .minimumScaleFactor(0.3)
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                                .padding(.vertical, 4)
+                                            .accessibilityElement(children: .ignore)
+                                            .accessibilityLabel(example.accessibilityDescription)
+                                        }
+                                        .padding(.bottom, 8)
+                                    }
                                     Divider()
                                 }
                             }
@@ -876,7 +922,8 @@ struct ContentView: View {
             han: han,
             fu: fu,
             honbaCount: honbaCount,
-            threePlayerMode: threePlayerMode
+            threePlayerMode: threePlayerMode,
+            bisectNorth: bisectNorth
         )
 
         basePoints = breakdown.basePoints
@@ -912,7 +959,8 @@ struct ContentView: View {
             winnerWind: winner,
             han: han,
             fu: fu,
-            honbaCount: honbaCount
+            honbaCount: honbaCount,
+            threePlayerMode: threePlayerMode
         )
 
         basePoints = breakdown.basePoints
@@ -957,7 +1005,8 @@ struct ContentView: View {
             players: playerList,
             selectedLoser: selectedLoser,
             honbaCount: honbaCount,
-            riichiPot: riichiPot
+            riichiPot: riichiPot,
+            threePlayerMode: threePlayerMode
         )
     }
 
@@ -1002,6 +1051,7 @@ struct ContentView: View {
     func scoreExhaust() {
         //count the tenpai
         for i in playerList.indices {
+            if threePlayerMode && i == 3 { continue }
             if playerList[i].tenpai {
                 tenpaiCounter += 1
             }

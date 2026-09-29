@@ -5,6 +5,7 @@ struct RiichiHonbaIndicatorView: View {
     let riichiPotIndicator: Int
     let honbaCount: Int
     let riichiPot: Int
+    let threePlayerMode: Bool
 
     var body: some View {
         VStack {
@@ -77,7 +78,7 @@ struct RiichiHonbaIndicatorView: View {
             .alert("", isPresented: $showHonbaInfo) {
                 Button("Ah, okay", role: .cancel) { }
             } message: {
-                Text("\(riichiPot) points in the riichi pot\nHonba count: \(honbaCount)\n\nThe honba count increases when either the dealer wins or there is an exhaustive draw and the dealer was in tenpai. The next winner adds 300 times the honba count to their score!")
+                Text("\(riichiPot) points in the riichi pot\nHonba count: \(honbaCount)\n\nThe honba count increases when either the dealer wins or there is an exhaustive draw and at least one person was in tenpai. The next winner adds \(threePlayerMode ? 200 : 300) times the honba count to their score!")
             }
             .padding()
             Spacer()
