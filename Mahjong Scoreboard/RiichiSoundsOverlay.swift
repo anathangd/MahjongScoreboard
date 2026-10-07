@@ -23,12 +23,26 @@ struct RiichiSoundsOverlay: View {
     @State private var showRenameAlert = false
     @State private var renameError: String?
     @State private var showImporter = false
+    @State private var importError: String?
+    @State private var deletingSound: RiichiSound?
 
     private var hasRenameError: Binding<Bool> {
         Binding(
             get: { renameError != nil },
             set: { if !$0 { renameError = nil } }
         )
+    }
+
+    private var hasImportError: Binding<Bool> {
+        Binding(
+            get: { importError != nil },
+            set: { if !$0 { importError = nil } }
+        )
+    }
+
+    private var deleteConfirmationTitle: String {
+        let name = deletingSound?.displayName ?? ""
+        return "delete \(name)?"
     }
 
     var body: some View {
@@ -126,13 +140,36 @@ struct RiichiSoundsOverlay: View {
         } message: {
             Text(renameError ?? "")
         }
+        .alert("couldn't import", isPresented: hasImportError) {
+            Button("ok", role: .cancel) {}
+        } message: {
+            Text(importError ?? "")
+        }
+        .confirmationDialog(
+            deleteConfirmationTitle,
+            isPresented: Binding(
+                get: { deletingSound != nil },
+                set: { if !$0 { deletingSound = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("delete", role: .destructive) {
+                if let deletingSound {
+                    deleteSound(deletingSound)
+                }
+                deletingSound = nil
+            }
+            Button("cancel", role: .cancel) {
+                deletingSound = nil
+            }
+        }
         .fileImporter(isPresented: $showImporter, allowedContentTypes: [.audio]) { result in
             switch result {
             case .success(let url):
                 do {
                     try store.importSound(from: url)
                 } catch {
-                    print("riichi sound import failed: \(error)")
+                    importError = error.localizedDescription
                 }
             case .failure(let error):
                 print("riichi sound import failed: \(error)")
@@ -166,7 +203,7 @@ struct RiichiSoundsOverlay: View {
                     }
 
                     Button {
-                        deleteSound(sound)
+                        deletingSound = sound
                     } label: {
                         Image(systemName: "trash")
                             .font(.system(size: 22))

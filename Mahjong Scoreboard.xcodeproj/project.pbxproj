@@ -433,6 +433,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Mahjong-Scoreboard-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Riichi Score";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Microphone access is used to record custom riichi sound effects.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

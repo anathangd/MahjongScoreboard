@@ -36,6 +36,12 @@ class RiichiSoundStore: ObservableObject {
     static let supportedExtensions = ["m4a", "mp3", "wav", "aif", "aiff", "caf"]
     private static let bundledSoundNames = ["riichi1", "riichi2", "riichi3Patrick", "riichi4Patrick"]
 
+    // Limits for imported sounds: these are short riichi calls, so huge files,
+    // long clips, and unlimited piles of sounds don't make sense.
+    static let maxImportFileSizeBytes: Int64 = 25 * 1024 * 1024
+    static let maxImportDuration: TimeInterval = 10
+    static let maxCustomSounds = 50
+
     private init() {
         refresh()
     }
@@ -72,7 +78,8 @@ class RiichiSoundStore: ObservableObject {
             + custom.map { RiichiSound(url: $0, isBundled: false) }
     }
 
-    /// Copies an external audio file (from the document picker) into the sounds directory.
+    /// Copies an external audio file (from the document picker) into the sounds
+    /// directory, after checking it against the import limits.
     func importSound(from sourceURL: URL) throws {
         let accessing = sourceURL.startAccessingSecurityScopedResource()
         defer {
@@ -80,6 +87,26 @@ class RiichiSoundStore: ObservableObject {
                 sourceURL.stopAccessingSecurityScopedResource()
             }
         }
+
+        guard customSounds.count < Self.maxCustomSounds else {
+            throw SoundImportError.tooManySounds
+        }
+
+        let attributes = try FileManager.default.attributesOfItem(atPath: sourceURL.path)
+        let fileSize = (attributes[.size] as? NSNumber)?.int64Value ?? 0
+        guard fileSize <= Self.maxImportFileSizeBytes else {
+            throw SoundImportError.fileTooLarge
+        }
+
+        let audioFile = try AVAudioFile(forReading: sourceURL)
+        let duration = Double(audioFile.length) / audioFile.processingFormat.sampleRate
+        guard duration > 0 else {
+            throw SoundImportError.unreadableFile
+        }
+        guard duration <= Self.maxImportDuration else {
+            throw SoundImportError.tooLong
+        }
+
         let destination = uniqueDestinationURL(for: sourceURL.lastPathComponent)
         try FileManager.default.copyItem(at: sourceURL, to: destination)
         refresh()
@@ -141,6 +168,26 @@ enum SoundExportError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .unreadableFile: return "the recording couldn't be read"
+        }
+    }
+}
+
+enum SoundImportError: LocalizedError {
+    case fileTooLarge
+    case tooLong
+    case tooManySounds
+    case unreadableFile
+
+    var errorDescription: String? {
+        switch self {
+        case .fileTooLarge:
+            return "that file is too big — riichi sounds must be under 25 MB"
+        case .tooLong:
+            return "riichi sounds must be \(Int(RiichiSoundStore.maxImportDuration)) seconds or shorter"
+        case .tooManySounds:
+            return "you already have \(RiichiSoundStore.maxCustomSounds) custom sounds — delete some first"
+        case .unreadableFile:
+            return "that file doesn't look like playable audio"
         }
     }
 }
@@ -285,28 +332,32 @@ class RiichiSoundRecorder: NSObject, ObservableObject, AVAudioPlayerDelegate {
                         gain: gain
                     )
                     await MainActor.run {
-                        self.startPreviewPlayer(url: tempURL, base: 0, tempFile: tempURL)
+                        // The temp file contains only the trimmed range, so its
+                        // timeline starts at 0; the playhead maps it onto the trim.
+                        self.startPreviewPlayer(url: tempURL, seekTo: 0, tempFile: tempURL)
                     }
                 } catch {
                     // Fall back to the unboosted recording if the render fails.
                     try? FileManager.default.removeItem(at: tempURL)
                     await MainActor.run {
-                        self.startPreviewPlayer(url: recordingURL, base: trimStart, tempFile: nil)
+                        self.startPreviewPlayer(url: recordingURL, seekTo: trimStart, tempFile: nil)
                     }
                 }
             }
         } else {
-            startPreviewPlayer(url: recordingURL, base: trimStart, tempFile: nil)
+            startPreviewPlayer(url: recordingURL, seekTo: trimStart, tempFile: nil)
         }
     }
 
-    /// Starts playback of `url` from `base` seconds, stopping at the end of the trim.
-    private func startPreviewPlayer(url: URL, base: TimeInterval, tempFile: URL?) {
+    /// Starts playback of `url` at `seekTo` seconds, stopping at the end of the trim.
+    /// The playhead maps `seekTo` onto the left trim handle, so playback always
+    /// sweeps the selected region regardless of where the file's timeline starts.
+    private func startPreviewPlayer(url: URL, seekTo: TimeInterval, tempFile: URL?) {
         stopPreview()
         do {
             let player = try AVAudioPlayer(contentsOf: url)
             player.delegate = self
-            player.currentTime = base
+            player.currentTime = seekTo
             player.prepareToPlay()
             player.play()
             previewPlayer = player
@@ -319,11 +370,12 @@ class RiichiSoundRecorder: NSObject, ObservableObject, AVAudioPlayerDelegate {
             }
 
             // Keep the playhead position in sync while the preview plays.
+            // seekTo maps onto the left handle (trimStart) on the waveform.
             previewTime = trimStart
             previewPlayheadTimer?.invalidate()
             previewPlayheadTimer = Timer.scheduledTimer(withTimeInterval: 0.03, repeats: true) { [weak self] _ in
                 guard let self, let player = self.previewPlayer else { return }
-                self.previewTime = min(base + player.currentTime, self.trimEnd)
+                self.previewTime = min(self.trimStart + player.currentTime - seekTo, self.trimEnd)
             }
         } catch {
             if let tempFile {
@@ -363,6 +415,13 @@ class RiichiSoundRecorder: NSObject, ObservableObject, AVAudioPlayerDelegate {
             return
         }
         stopPreview()
+
+        // The custom-sound cap applies to recordings too, not just imports.
+        guard RiichiSoundStore.shared.customSounds.count < RiichiSoundStore.maxCustomSounds else {
+            saveError = SoundImportError.tooManySounds.localizedDescription
+            completion(false)
+            return
+        }
 
         let destination = RiichiSoundStore.shared.uniqueDestinationURL(for: "recorded riichi.m4a")
         let trimStart = self.trimStart
