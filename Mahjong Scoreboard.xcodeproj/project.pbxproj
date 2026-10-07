@@ -35,6 +35,10 @@
 		44A288492E6FB5AF008C2AFA /* ShowFuButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A288482E6FB5AF008C2AFA /* ShowFuButton.swift */; };
 		44A2884B2E6FB673008C2AFA /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A2884A2E6FB673008C2AFA /* AudioManager.swift */; };
 		44A2884D2E6FBC4E008C2AFA /* ScoreChangeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A2884C2E6FBC4E008C2AFA /* ScoreChangeView.swift */; };
+		44AA10022F90000000000001 /* RiichiSoundStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44AA10012F90000000000001 /* RiichiSoundStore.swift */; };
+		44AA10042F90000000000001 /* RiichiSoundsOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44AA10032F90000000000001 /* RiichiSoundsOverlay.swift */; };
+		44AA10062F90000000000001 /* RecordRiichiSoundOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44AA10052F90000000000001 /* RecordRiichiSoundOverlay.swift */; };
+		44AA10082F90000000000001 /* WaveformView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44AA10072F90000000000001 /* WaveformView.swift */; };
 		44D9152E306B914C00F77171 /* NorthBisectionButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D9152D306B914C00F77171 /* NorthBisectionButton.swift */; };
 /* End PBXBuildFile section */
 
@@ -48,6 +52,7 @@
 		441D8ED12AAC8DFF00F5FE53 /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
 		441D8ED32AACD0CC00F5FE53 /* TenpaiButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TenpaiButton.swift; sourceTree = "<group>"; };
 		441D8ED52AACE06500F5FE53 /* RiichiButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiichiButton.swift; sourceTree = "<group>"; };
+		44213A8A307687C900A79D4A /* Mahjong-Scoreboard-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Mahjong-Scoreboard-Info.plist"; sourceTree = SOURCE_ROOT; };
 		44218EC42F889E0600101C9F /* PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
 		446029A72F8A0EF5009336C8 /* HandScoring.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandScoring.swift; sourceTree = "<group>"; };
 		446029A92F8A0F13009336C8 /* MultipleRonScoring.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipleRonScoring.swift; sourceTree = "<group>"; };
@@ -69,6 +74,10 @@
 		44A288482E6FB5AF008C2AFA /* ShowFuButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowFuButton.swift; sourceTree = "<group>"; };
 		44A2884A2E6FB673008C2AFA /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
 		44A2884C2E6FBC4E008C2AFA /* ScoreChangeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreChangeView.swift; sourceTree = "<group>"; };
+		44AA10012F90000000000001 /* RiichiSoundStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiichiSoundStore.swift; sourceTree = "<group>"; };
+		44AA10032F90000000000001 /* RiichiSoundsOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiichiSoundsOverlay.swift; sourceTree = "<group>"; };
+		44AA10052F90000000000001 /* RecordRiichiSoundOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordRiichiSoundOverlay.swift; sourceTree = "<group>"; };
+		44AA10072F90000000000001 /* WaveformView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveformView.swift; sourceTree = "<group>"; };
 		44D9152D306B914C00F77171 /* NorthBisectionButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NorthBisectionButton.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -102,6 +111,7 @@
 		441D8EBE2AAB728E00F5FE53 /* Mahjong Scoreboard */ = {
 			isa = PBXGroup;
 			children = (
+				44213A8A307687C900A79D4A /* Mahjong-Scoreboard-Info.plist */,
 				441D8EC32AAB728E00F5FE53 /* Assets.xcassets */,
 				44A2884A2E6FB673008C2AFA /* AudioManager.swift */,
 				441D8EC12AAB728E00F5FE53 /* ContentView.swift */,
@@ -113,9 +123,12 @@
 				446029A92F8A0F13009336C8 /* MultipleRonScoring.swift */,
 				441D8ED12AAC8DFF00F5FE53 /* Player.swift */,
 				44218EC42F889E0600101C9F /* PlayerView.swift */,
+				44AA10052F90000000000001 /* RecordRiichiSoundOverlay.swift */,
 				441D8EC52AAB728E00F5FE53 /* Riichi Sounds */,
 				441D8ED52AACE06500F5FE53 /* RiichiButton.swift */,
 				446029BD2F8A2531009336C8 /* RiichiHonbaIndicatorView.swift */,
+				44AA10032F90000000000001 /* RiichiSoundsOverlay.swift */,
+				44AA10012F90000000000001 /* RiichiSoundStore.swift */,
 				446029AD2F8A1BAF009336C8 /* RonOverlay.swift */,
 				446029AB2F8A118A009336C8 /* ScoreApplication.swift */,
 				44A2884C2E6FBC4E008C2AFA /* ScoreChangeView.swift */,
@@ -127,6 +140,7 @@
 				441D8ED32AACD0CC00F5FE53 /* TenpaiButton.swift */,
 				446029BB2F8A24B7009336C8 /* TimerOverlay.swift */,
 				446029AF2F8A1BB9009336C8 /* TsumoOverlay.swift */,
+				44AA10072F90000000000001 /* WaveformView.swift */,
 				44A288462E6FB54A008C2AFA /* Yaku.swift */,
 			);
 			path = "Mahjong Scoreboard";
@@ -229,6 +243,10 @@
 				44A288472E6FB54A008C2AFA /* Yaku.swift in Sources */,
 				446029B42F8A1DB1009336C8 /* ShowFuOverlay.swift in Sources */,
 				446029BE2F8A2531009336C8 /* RiichiHonbaIndicatorView.swift in Sources */,
+				44AA10022F90000000000001 /* RiichiSoundStore.swift in Sources */,
+				44AA10042F90000000000001 /* RiichiSoundsOverlay.swift in Sources */,
+				44AA10062F90000000000001 /* RecordRiichiSoundOverlay.swift in Sources */,
+				44AA10082F90000000000001 /* WaveformView.swift in Sources */,
 				446029B02F8A1BB9009336C8 /* TsumoOverlay.swift in Sources */,
 				446029B82F8A1FFE009336C8 /* ExhaustOverlay.swift in Sources */,
 				441D8EC22AAB728E00F5FE53 /* ContentView.swift in Sources */,
@@ -373,11 +391,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Mahjong-Scoreboard-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Riichi Score";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Microphone access is used to record custom riichi sound effects.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -389,7 +409,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NathanDavis.Mahjong-Scoreboard";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -408,11 +428,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Mahjong-Scoreboard-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Riichi Score";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Microphone access is used to record custom riichi sound effects.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -424,7 +446,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NathanDavis.Mahjong-Scoreboard";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

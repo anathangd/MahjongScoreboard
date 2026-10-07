@@ -15,16 +15,9 @@ class AudioManager: ObservableObject {
     private let riichiSoundNames = ["riichi1", "riichi2", "riichi3Patrick", "riichi4Patrick"]
 
     private func randomRiichiSoundURL() -> URL? {
-        let explicitMatch = riichiSoundNames.compactMap { name in
-            Bundle.main.url(
-                forResource: name,
-                withExtension: "m4a",
-                subdirectory: "Riichi Sounds"
-            )
-        }.randomElement()
-
-        if let explicitMatch {
-            return explicitMatch
+        // Custom sounds imported or recorded by the user join the random pool.
+        if let randomSound = RiichiSoundStore.shared.sounds.randomElement() {
+            return randomSound.url
         }
 
         let matchingURLs = supportedAudioExtensions.flatMap { fileExtension in

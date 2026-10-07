@@ -8,6 +8,7 @@
 import SwiftUI
 import AVFoundation
 import Combine
+import UniformTypeIdentifiers
 
 struct ContentView: View {
      //player1 is in charge of the scoreboard
@@ -135,7 +136,11 @@ struct ContentView: View {
     @State private var multipleRonWinnersTitle = ""
     
     @State private var bisectNorth: Bool = false
-    
+
+    @StateObject private var soundStore = RiichiSoundStore.shared
+    @State private var showRiichiSoundsList = false
+    @State private var showRiichiRecorder = false
+
     let isPreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
     
     private var scoresAreChanging: Bool {
@@ -534,7 +539,7 @@ struct ContentView: View {
             if ron || tsumo {
                 VStack (spacing: 2) {
                     ShowFuButton(showFu: $showFu, timerOn: $timerOn, ron: $ron, tsumo: $tsumo, calculateFu: $calculateFu, han: $han)
-                    if threePlayerMode {
+                    if threePlayerMode && tsumo {
                         NorthBisectionButton(bisectNorth: $bisectNorth, ron: $ron, tsumo: $tsumo)
                     }
                     Spacer()
@@ -563,31 +568,8 @@ struct ContentView: View {
                 )
             }
             
-            if enterNames {
-                EnterNamesOverlay(
-                    enterPlayer1: $enterPlayer1,
-                    enterPlayer2: $enterPlayer2,
-                    enterPlayer3: $enterPlayer3,
-                    enterPlayer4: $enterPlayer4,
-                    threePlayerMode: threePlayerMode,
-                    bottomPaddingForButtons: bottomPaddingForButtons,
-                    onQuick3: {
-                        if !editNames {
-                            threePlayerMode = true
-                            quick3 = true
-                            decideSeats()
-                        }
-                        enterNames = false
-                    },
-                    onSubmit: {
-                        showNames = true
-                        if !editNames {
-                            decideSeats()
-                        }
-                        enterNames = false
-                    }
-                )
-            }
+            enterNamesSection
+
             
             if scoringScreen {
                 ScoringDisplay(
@@ -689,80 +671,11 @@ struct ContentView: View {
                 )
             }
             
-            if displayResultsScreen {
-                ZStack {
-                    Rectangle()
-                        .foregroundColor(.black)
-                        .opacity(0.7)
-                        
-                    VStack {
-                        Text(newArr[0].name + ": " + String(newArr[0].score))
-                            .font(.system(size: 50))
-                        Text(newArr[1].name + ": " + String(newArr[1].score))
-                            .font(.system(size: 48))
-                        Text(newArr[2].name + ": " + String(newArr[2].score))
-                            .font(.system(size: 46))
-                        Text(newArr[3].name + ": " + String(newArr[3].score))
-                            .font(.system(size: 44))
-                            .opacity(threePlayerMode ? 0: 1)
-                        
-                    }
-                    .font(.system(size: 30))
-                    .foregroundColor(.white)
-                    .padding(40)
-                    Color.clear
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            displayResultsScreen = false
-                        }
-                }.ignoresSafeArea()
-            }
-            
-            if showYaku {
-                Rectangle()
-                    .ignoresSafeArea()
-                    .foregroundStyle(.white)
-                VStack {
-                    ScrollView(showsIndicators: false) {
-                        VStack(alignment: .leading) {
-                            ForEach(yakuList) { yaku in
-                                Text(yaku.han)
-                                    .font(.title2)
-                                    .padding(.top)
-                                    .padding(.bottom)
+            resultsOverlay
 
-                                ForEach(yaku.entries, id: \.self) { entry in
-                                    Text(.init(entry))
-                                        .padding(.top, 5)
-                                        .padding(.bottom, 5)
-                                    if let example = YakuTileExample.example(for: entry) {
-                                        VStack(alignment: .leading, spacing: 6) {
-                                            Text(example.title)
-                                                .font(.caption)
-                                                .foregroundStyle(.secondary)
-                                            Text(example.groups.joined(separator: "  "))
-                                                .foregroundStyle(example.isGreen ? Color(red: 0, green: 0.25, blue: 0) : Color.primary)
-                                                .font(.system(size: 30))
-                                                .lineLimit(1)
-                                                .minimumScaleFactor(0.3)
-                                                .frame(maxWidth: .infinity, alignment: .leading)
-                                                .padding(.vertical, 4)
-                                            .accessibilityElement(children: .ignore)
-                                            .accessibilityLabel(example.accessibilityDescription)
-                                        }
-                                        .padding(.bottom, 8)
-                                    }
-                                    Divider()
-                                }
-                            }
-                        }
-                        .frame(maxWidth: 370, alignment: .leading)
-                    }
-                    Button("done") {
-                        showYaku = false
-                    }
-                }
-            }
+            
+            yakuOverlay
+
             
             if showFu {
                 ShowFuOverlay(
@@ -772,18 +685,25 @@ struct ContentView: View {
                     showScoringControls: ron || tsumo
                 )
             }
-            
+
+            riichiSoundOverlays
+
         }
         .onAppear {
             let isPreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
 
             if !isPreview {
+                // Keep the screen awake while the scoreboard is open.
+                UIApplication.shared.isIdleTimerDisabled = true
                 timerDown = Timer.publish(every: 0.001, on: .main, in: .common).autoconnect()
                 timerUp = Timer.publish(every: 0.001, on: .main, in: .common).autoconnect()
                 timerLeft = Timer.publish(every: 0.001, on: .main, in: .common).autoconnect()
                 timerRight = Timer.publish(every: 0.001, on: .main, in: .common).autoconnect()
                 playerTimer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
             }
+        }
+        .onDisappear {
+            UIApplication.shared.isIdleTimerDisabled = false
         }
         .onChange(of: downScoreChange) {
             finalizeScoringFlagsIfNeeded()
@@ -796,6 +716,160 @@ struct ContentView: View {
         }
         .onChange(of: rightScoreChange) {
             finalizeScoringFlagsIfNeeded()
+        }
+    }
+
+    @ViewBuilder
+    private var enterNamesSection: some View {
+        if enterNames {
+            EnterNamesOverlay(
+                enterPlayer1: $enterPlayer1,
+                enterPlayer2: $enterPlayer2,
+                enterPlayer3: $enterPlayer3,
+                enterPlayer4: $enterPlayer4,
+                threePlayerMode: threePlayerMode,
+                bottomPaddingForButtons: bottomPaddingForButtons,
+                onQuick3: {
+                    if !editNames {
+                        threePlayerMode = true
+                        quick3 = true
+                        decideSeats()
+                    }
+                    enterNames = false
+                },
+                onSubmit: {
+                    showNames = true
+                    if !editNames {
+                        decideSeats()
+                    }
+                    enterNames = false
+                }
+            )
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    Button {
+                        showRiichiSoundsList = true
+                    } label: {
+                        Image(systemName: "waveform.circle")
+                            .font(.system(size: 40))
+                    }
+                    .padding(20)
+                }
+            }
+            .ignoresSafeArea()
+        }
+    }
+
+    @ViewBuilder
+    private var riichiSoundOverlays: some View {
+        if showRiichiSoundsList {
+            RiichiSoundsOverlay(
+                store: soundStore,
+                onDismiss: {
+                    showRiichiSoundsList = false
+                },
+                onRecord: {
+                    showRiichiSoundsList = false
+                    showRiichiRecorder = true
+                }
+            )
+        }
+
+        if showRiichiRecorder {
+            RecordRiichiSoundOverlay(
+                onDismiss: {
+                    // Cancel goes straight back to enter names.
+                    showRiichiRecorder = false
+                },
+                onSaved: {
+                    // Save returns to the sounds list.
+                    showRiichiRecorder = false
+                    showRiichiSoundsList = true
+                }
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var resultsOverlay: some View {
+        if displayResultsScreen {
+            ZStack {
+                Rectangle()
+                    .foregroundColor(.black)
+                    .opacity(0.7)
+
+                VStack {
+                    Text(newArr[0].name + ": " + String(newArr[0].score))
+                        .font(.system(size: 50))
+                    Text(newArr[1].name + ": " + String(newArr[1].score))
+                        .font(.system(size: 48))
+                    Text(newArr[2].name + ": " + String(newArr[2].score))
+                        .font(.system(size: 46))
+                    Text(newArr[3].name + ": " + String(newArr[3].score))
+                        .font(.system(size: 44))
+                        .opacity(threePlayerMode ? 0: 1)
+
+                }
+                .font(.system(size: 30))
+                .foregroundColor(.white)
+                .padding(40)
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        displayResultsScreen = false
+                    }
+            }.ignoresSafeArea()
+        }
+    }
+
+    @ViewBuilder
+    private var yakuOverlay: some View {
+        if showYaku {
+            Rectangle()
+                .ignoresSafeArea()
+                .foregroundStyle(.white)
+            VStack {
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading) {
+                        ForEach(yakuList) { yaku in
+                            Text(yaku.han)
+                                .font(.title2)
+                                .padding(.top)
+                                .padding(.bottom)
+
+                            ForEach(yaku.entries, id: \.self) { entry in
+                                Text(.init(entry))
+                                    .padding(.top, 5)
+                                    .padding(.bottom, 5)
+                                if let example = YakuTileExample.example(for: entry) {
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        Text(example.title)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                        Text(example.groups.joined(separator: "  "))
+                                            .foregroundStyle(example.isGreen ? Color(red: 0, green: 0.25, blue: 0) : Color.primary)
+                                            .font(.system(size: 30))
+                                            .lineLimit(1)
+                                            .minimumScaleFactor(0.3)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .padding(.vertical, 4)
+                                        .accessibilityElement(children: .ignore)
+                                        .accessibilityLabel(example.accessibilityDescription)
+                                    }
+                                    .padding(.bottom, 8)
+                                }
+                                Divider()
+                            }
+                        }
+                    }
+                    .frame(maxWidth: 370, alignment: .leading)
+                }
+                Button("done") {
+                    showYaku = false
+                }
+            }
         }
     }
 
