@@ -262,6 +262,9 @@ struct ScoringDisplay: View {
                 if (isMultipleRon && multipleRonHonbaIncreases) || (!isMultipleRon && winner == "東") {
                     Text("Honba increases by 1")
                         .font(.title2)
+                } else {
+                    Text("Winds rotate")
+                        .font(.title2)
                 }
             }
             .padding()

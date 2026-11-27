@@ -111,6 +111,7 @@ struct ScoreApplicationPlan {
     let winningPointsByIndex: [Int]
     let losingPointsByIndex: [Int]
     let scoreChangesByIndex: [Bool]
+    let shouldRotateWinds: Bool
     let honbaCount: Int
     let riichiPot: Int
     let riichiPotIndicator: Int
@@ -167,6 +168,7 @@ enum ScoreApplication {
             winningPointsByIndex: winningPointsByIndex,
             losingPointsByIndex: losingPointsByIndex,
             scoreChangesByIndex: scoreChangesByIndex,
+            shouldRotateWinds: !players.contains(where: { $0.winner && $0.wind == "東" }),
             honbaCount: nextHonbaCount,
             riichiPot: 0,
             riichiPotIndicator: 0,
@@ -215,6 +217,7 @@ enum ScoreApplication {
             winningPointsByIndex: winningPointsByIndex,
             losingPointsByIndex: losingPointsByIndex,
             scoreChangesByIndex: scoreChangesByIndex,
+            shouldRotateWinds: winnerWind != "東",
             honbaCount: nextHonbaCount,
             riichiPot: 0,
             riichiPotIndicator: 0,
@@ -260,6 +263,7 @@ enum ScoreApplication {
             winningPointsByIndex: winningPointsByIndex,
             losingPointsByIndex: losingPointsByIndex,
             scoreChangesByIndex: scoreChangesByIndex,
+            shouldRotateWinds: !breakdown.honbaCountWillIncrease,
             honbaCount: breakdown.honbaCountWillIncrease ? (honbaCount + 1) : 0,
             riichiPot: 0,
             riichiPotIndicator: 0,
@@ -286,12 +290,13 @@ enum ScoreApplication {
         var winningPointsByIndex = Array(repeating: 0, count: players.count)
         var losingPointsByIndex = Array(repeating: 0, count: players.count)
         var scoreChangesByIndex = Array(repeating: false, count: players.count)
+        let shouldRotateWinds = !players.contains(where: { $0.wind == "東" && $0.tenpai })
 
         for i in updatedPlayers.indices {
             updatedPlayers[i].riichi = false
         }
 
-        let nextHonbaCount = tenpaiCount > 0 ? (honbaCount + 1) : 0
+        let nextHonbaCount = honbaCount + 1
         let noPayouts = (threePlayerMode && (tenpaiCount == 0 || tenpaiCount == 3)) || (!threePlayerMode && (tenpaiCount == 0 || tenpaiCount == 4))
 
         if noPayouts {
@@ -303,6 +308,7 @@ enum ScoreApplication {
                 winningPointsByIndex: winningPointsByIndex,
                 losingPointsByIndex: losingPointsByIndex,
                 scoreChangesByIndex: scoreChangesByIndex,
+                shouldRotateWinds: shouldRotateWinds,
                 honbaCount: nextHonbaCount,
                 riichiPot: riichiPot,
                 riichiPotIndicator: riichiPot / 1000,
@@ -354,6 +360,7 @@ enum ScoreApplication {
             winningPointsByIndex: winningPointsByIndex,
             losingPointsByIndex: losingPointsByIndex,
             scoreChangesByIndex: scoreChangesByIndex,
+            shouldRotateWinds: shouldRotateWinds,
             honbaCount: nextHonbaCount,
             riichiPot: riichiPot,
             riichiPotIndicator: riichiPot / 1000,

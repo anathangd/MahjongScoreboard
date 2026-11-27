@@ -45,3 +45,27 @@ enum RonSwipe {
         return bestIndex
     }
 }
+
+enum WindRotation {
+    static func advance(winds: [String], roundWind: String, extraRounds: Bool,
+                        threePlayerMode: Bool) -> (winds: [String], roundWind: String, extraRounds: Bool) {
+        var nextWinds = winds
+        let lastActiveWind = nextWinds.remove(at: threePlayerMode ? 3 : 4)
+        nextWinds.insert(lastActiveWind, at: 1)
+        var nextRoundWind = roundWind
+        var nextExtraRounds = extraRounds
+        if nextWinds[1] == "東" {
+            switch roundWind {
+            case "東": nextRoundWind = "南"
+            case "南":
+                nextExtraRounds = true
+                nextRoundWind = "西"
+            case "西": nextRoundWind = "北"
+            default:
+                nextExtraRounds = false
+                nextRoundWind = "東"
+            }
+        }
+        return (nextWinds, nextRoundWind, nextExtraRounds)
+    }
+}

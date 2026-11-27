@@ -76,6 +76,7 @@ struct ContentView: View {
     @State var upScoreChange = false
     @State var leftScoreChange = false
     @State var rightScoreChange = false
+    @State private var pendingWindRotation = false
     @State var downLosingPoints = 0
     @State var upLosingPoints = 0
     @State var leftLosingPoints = 0
@@ -187,17 +188,6 @@ struct ContentView: View {
             //menu buttons
             GlassEffectContainer {
                 VStack {
-                    Button {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
-                            showDice = false
-                        }
-                        rollDice()
-                    } label: {
-                        Image(systemName: "dice")
-                        // .padding(.bottom, -8)
-                            .foregroundStyle(.black)
-                    }
-                    .disabled(timerOn ? true : false)
                     Menu {
                         Button("Reset") {
                             restart()
@@ -220,6 +210,19 @@ struct ContentView: View {
                         Image(systemName: "hourglass").foregroundColor(.black)
                             .padding(.init(top: -5, leading: 5, bottom: 15, trailing: 5))
                     }
+                    .disabled(timerOn)
+                    Button {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
+                            showDice = false
+                        }
+                        rollDice()
+                    } label: {
+                        Image(systemName: "dice")
+                            .font(.system(size: 70))
+                            .foregroundStyle(.purple)
+                    }
+                    .disabled(timerOn)
+                    /*
                     Button {
                         rotateWinds()
                     } label: {
@@ -229,6 +232,7 @@ struct ContentView: View {
                             .foregroundColor(.black)
                     }
                             .disabled(scoresAreChanging)
+                        */
                     Button {
                         exhaust = true
                     } label: {
@@ -239,7 +243,7 @@ struct ContentView: View {
                     Button {
                         displayResults()
                     } label: {
-                        Image(systemName: "line.3.horizontal").foregroundColor(.black)
+                        Image(systemName: "list.dash").foregroundColor(.black)
                             .padding(5)
                     }.disabled(timerOn || scoresAreChanging)
                     
@@ -816,6 +820,8 @@ struct ContentView: View {
                     ForEach(0..<newArr.count, id: \.self) { index in
                         let player = newArr[index]
                         Text("\(player.name): \(player.score)")
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.05)
                             .frame(maxWidth: .infinity)
                             .contentShape(Rectangle())
                             .onLongPressGesture {
@@ -1036,6 +1042,11 @@ struct ContentView: View {
     func finalizeScoringFlagsIfNeeded() {
         if downScoreChange || upScoreChange || leftScoreChange || rightScoreChange {
             return
+        }
+
+        if pendingWindRotation {
+            pendingWindRotation = false
+            rotateWinds()
         }
 
         for i in playerList.indices {
@@ -1271,6 +1282,7 @@ struct ContentView: View {
         scoringScreen = false
 
         playerList = plan.players
+        pendingWindRotation = plan.shouldRotateWinds
 
         downWinningPoints = plan.winningPointsByIndex[0]
         rightWinningPoints = plan.winningPointsByIndex[1]
@@ -1299,6 +1311,7 @@ struct ContentView: View {
         if let selectedLoser = plan.selectedLoser {
             self.selectedLoser = selectedLoser
         }
+        finalizeScoringFlagsIfNeeded()
     }
     
     func scoreExhaust() {
@@ -1376,6 +1389,7 @@ struct ContentView: View {
         upScoreChange = false
         leftScoreChange = false
         rightScoreChange = false
+        pendingWindRotation = false
         downWinningPoints = 0
         rightWinningPoints = 0
         upWinningPoints = 0
@@ -1401,26 +1415,11 @@ struct ContentView: View {
     }
     
     func rotateWinds() {
-        if (threePlayerMode) {
-            let poppedSecondToLast = windsList.remove(at: 3)
-            windsList.insert(poppedSecondToLast, at: 1)
-        }
-        else {
-            let popped = windsList.popLast()
-            windsList.insert(popped ?? "East", at: 1)
-        }
-        if windsList[1] == "東" {
-            switch roundWind {
-            case "東": roundWind = "南"
-            case "南":
-                extraRounds = true
-                roundWind = "西"
-            case "西": roundWind = "北"
-            default:
-                extraRounds = false
-                roundWind = "東"
-            }
-        }
+        let next = WindRotation.advance(winds: windsList, roundWind: roundWind,
+                                        extraRounds: extraRounds, threePlayerMode: threePlayerMode)
+        windsList = next.winds
+        roundWind = next.roundWind
+        extraRounds = next.extraRounds
         playerList[0].wind = windsList[1]
         playerList[1].wind = windsList[2]
         playerList[2].wind = windsList[3]

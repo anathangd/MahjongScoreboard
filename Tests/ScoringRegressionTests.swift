@@ -11,6 +11,24 @@ struct ScoringRegressionTests {
                    loser: false, tenpai: false, riichi: false)
         }
         var cases = 0
+        for threePlayerMode in [false, true] {
+            let activeCount = threePlayerMode ? 3 : 4
+            var winds = ["", "東", "南", "西", "北"]
+            var roundWind = "東"
+            var extraRounds = false
+            for rotation in 1...(activeCount * 4) {
+                let next = WindRotation.advance(winds: winds, roundWind: roundWind,
+                                                extraRounds: extraRounds, threePlayerMode: threePlayerMode)
+                winds = next.winds
+                roundWind = next.roundWind
+                extraRounds = next.extraRounds
+                let expectedRound = ["東", "南", "西", "北"][(rotation / activeCount) % 4]
+                precondition(roundWind == expectedRound)
+                precondition(extraRounds == (roundWind == "西" || roundWind == "北"))
+                if threePlayerMode { precondition(winds[4] == "北") }
+            }
+            precondition(winds == ["", "東", "南", "西", "北"])
+        }
         let seatPositions: [(Double, Double)] = [(0, 1), (1, 0), (0, -1), (-1, 0)]
         for winnerIndex in seatPositions.indices {
             for loserIndex in seatPositions.indices where winnerIndex != loserIndex {
@@ -41,6 +59,7 @@ struct ScoringRegressionTests {
         historyPlayers[2].winner = true
         let historyPlan = ScoreApplication.ron(players: historyPlayers, winnerPoints: 5200, riichiPot: 2000,
                                winnerWind: "西", loserWind: "南", honbaCount: 1)
+        precondition(historyPlan.shouldRotateWinds)
         let history = RoundHistoryEntry(players: historyPlayers, winds: ["", "東", "南", "西", "北"],
                         roundWind: "南", extraRounds: false, honbaCount: 1, riichiPot: 2000,
                         threePlayerMode: false,
@@ -68,6 +87,7 @@ struct ScoringRegressionTests {
         let tsumoPlan = ScoreApplication.tsumo(players: tsumoPlayers, winnerPoints: 1500, dealerPayment: 700,
                                nonDealerPayment: 800, riichiPot: 0, honbaCount: 0,
                                threePlayerMode: true)
+        precondition(tsumoPlan.shouldRotateWinds)
         let tsumoHistory = RoundHistoryEntry(players: tsumoPlayers, winds: ["", "東", "南", "西", "北"],
                              roundWind: "東", extraRounds: false, honbaCount: 0, riichiPot: 0,
                              threePlayerMode: true,
@@ -83,6 +103,7 @@ struct ScoringRegressionTests {
         let multipleBreakdown = MultipleRonScoring.calculateBreakdown(players: multiplePlayers, selectedLoser: "西",
                                            honbaCount: 0, riichiPot: 1000)!
         let multiplePlan = ScoreApplication.multipleRon(players: multiplePlayers, breakdown: multipleBreakdown, honbaCount: 0)
+        precondition(!multiplePlan.shouldRotateWinds)
         let multipleHistory = RoundHistoryEntry(players: multiplePlayers, winds: ["", "東", "南", "西", "北"],
                             roundWind: "東", extraRounds: false, honbaCount: 0, riichiPot: 1000,
                             threePlayerMode: false,
@@ -96,11 +117,34 @@ struct ScoringRegressionTests {
         precondition(multipleHistory.summary(currentPlayers: multiplePlayers).allSatisfy { $0.contains("ron Discarder (西)") })
         let drawPlan = ScoreApplication.exhaustiveDraw(players: initialPlayers, tenpaiCount: 0, honbaCount: 2,
                                    riichiPot: 1000, threePlayerMode: false, han: 1, fu: 20, addingFu: 20)
+        precondition(drawPlan.shouldRotateWinds && drawPlan.scoreChangesByIndex.allSatisfy { !$0 })
         let drawHistory = RoundHistoryEntry(players: initialPlayers, winds: ["", "東", "南", "西", "北"],
                             roundWind: "西", extraRounds: true, honbaCount: 2, riichiPot: 1000,
                             threePlayerMode: false, result: .exhaustiveDraw, plan: drawPlan)
         precondition(drawHistory.summary(currentPlayers: initialPlayers) == ["Exhaustive draw"] && drawHistory.changes(currentPlayers: initialPlayers).isEmpty)
         precondition(drawHistory.round == "West 1 - 2 honba" && drawHistory.extraRounds && drawHistory.honbaCount == 2)
+        var dealerWinner = initialPlayers
+        dealerWinner[0].winner = true
+        precondition(!ScoreApplication.ron(players: dealerWinner, winnerPoints: 1500, riichiPot: 0,
+                                           winnerWind: "東", loserWind: "南", honbaCount: 0).shouldRotateWinds)
+        precondition(!ScoreApplication.tsumo(players: dealerWinner, winnerPoints: 1500, dealerPayment: 0,
+                                             nonDealerPayment: 500, riichiPot: 0, honbaCount: 0,
+                                             threePlayerMode: false).shouldRotateWinds)
+        var nonDealerWinners = initialPlayers
+        nonDealerWinners[1].multRonWin = true
+        nonDealerWinners[2].multRonWin = true
+        let nonDealerBreakdown = MultipleRonScoring.calculateBreakdown(players: nonDealerWinners, selectedLoser: "北",
+                                                                       honbaCount: 0, riichiPot: 0)!
+        precondition(ScoreApplication.multipleRon(players: nonDealerWinners, breakdown: nonDealerBreakdown,
+                                                  honbaCount: 0).shouldRotateWinds)
+        for threePlayerMode in [false, true] {
+            var nonDealerTenpai = initialPlayers
+            nonDealerTenpai[1].tenpai = true
+            let plan = ScoreApplication.exhaustiveDraw(players: nonDealerTenpai, tenpaiCount: 1, honbaCount: 0,
+                                                       riichiPot: 0, threePlayerMode: threePlayerMode,
+                                                       han: 1, fu: 20, addingFu: 20)
+            precondition(plan.shouldRotateWinds)
+        }
         for winnerCount in [2, 3] {
             for pot in [0, 1000, 2000, 5000] {
                 for honba in [0, 1, 3] {
@@ -126,6 +170,7 @@ struct ScoringRegressionTests {
                         precondition(plan.losingPointsByIndex[3] == expectedLoss)
                         precondition(plan.winningPointsByIndex.reduce(0, +) - plan.losingPointsByIndex.reduce(0, +) == pot)
                         precondition(plan.riichiPot == 0 && plan.honbaCount == honba + 1)
+                        precondition(!plan.shouldRotateWinds)
                         cases += 1
                     }
                 }
@@ -142,7 +187,8 @@ struct ScoringRegressionTests {
                 )
                 precondition(plan.players.allSatisfy { !$0.tenpai && !$0.riichi })
                 precondition(plan.riichiPot == 2000)
-                precondition(plan.honbaCount == (tenpaiCount > 0 ? 3 : 0))
+                precondition(plan.honbaCount == 3)
+                precondition(plan.shouldRotateWinds == (tenpaiCount == 0))
                 let gains = plan.winningPointsByIndex.prefix(activeCount).reduce(0, +)
                 let losses = plan.losingPointsByIndex.prefix(activeCount).reduce(0, +)
                 precondition(gains == losses)
