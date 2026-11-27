@@ -277,6 +277,7 @@ struct ContentView: View {
                         ronList.append(playerList[0].wind)
                         ronList.append(playerList[1].wind)
                     },
+                    onRonSwipe: { startRonFromSwipe(winnerIndex: 2, translation: $0) },
                     onTsumo: {
                         tsumo = true
                         playerList[2].winner = true
@@ -317,6 +318,7 @@ struct ContentView: View {
                             ronList.append(playerList[3].wind)
                         }
                     },
+                    onRonSwipe: { startRonFromSwipe(winnerIndex: 0, translation: $0) },
                     onTsumo: {
                         tsumo = true
                         playerList[0].winner = true
@@ -355,6 +357,7 @@ struct ContentView: View {
                         ronList.append(playerList[1].wind)
                         ronList.append(playerList[2].wind)
                     },
+                    onRonSwipe: { startRonFromSwipe(winnerIndex: 3, translation: $0) },
                     onTsumo: {
                         tsumo = true
                         playerList[3].winner = true
@@ -398,6 +401,7 @@ struct ContentView: View {
                         }
                         ronList.append(playerList[0].wind)
                     },
+                    onRonSwipe: { startRonFromSwipe(winnerIndex: 1, translation: $0) },
                     onTsumo: {
                         tsumo = true
                         playerList[1].winner = true
@@ -1144,6 +1148,22 @@ struct ContentView: View {
             riichiPot += 1000
             riichiPotIndicator = riichiPot / 1000
         }
+    }
+
+    private func startRonFromSwipe(winnerIndex: Int, translation: CGSize) {
+        guard !timerOn, !scoresAreChanging,
+              let loserIndex = RonSwipe.loserIndex(winnerIndex: winnerIndex,
+                                                   horizontal: Double(translation.width),
+                                                   vertical: Double(translation.height),
+                                                   threePlayerMode: threePlayerMode) else { return }
+        ronList = (1..<playerList.count).compactMap { offset in
+            let index = (winnerIndex + offset) % playerList.count
+            return threePlayerMode && index == 3 ? nil : playerList[index].wind
+        }
+        playerList[winnerIndex].winner = true
+        winner = playerList[winnerIndex].wind
+        loser = playerList[loserIndex].wind
+        ron = true
     }
 
     func scoreTsumo() {

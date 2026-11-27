@@ -11,6 +11,30 @@ struct ScoringRegressionTests {
                    loser: false, tenpai: false, riichi: false)
         }
         var cases = 0
+        let seatPositions: [(Double, Double)] = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+        for winnerIndex in seatPositions.indices {
+            for loserIndex in seatPositions.indices where winnerIndex != loserIndex {
+                let horizontal = seatPositions[loserIndex].0 - seatPositions[winnerIndex].0
+                let vertical = seatPositions[loserIndex].1 - seatPositions[winnerIndex].1
+                precondition(RonSwipe.loserIndex(winnerIndex: winnerIndex, horizontal: horizontal, vertical: vertical,
+                                                threePlayerMode: false) == loserIndex)
+                if winnerIndex != 3 {
+                    precondition(RonSwipe.loserIndex(winnerIndex: winnerIndex, horizontal: horizontal, vertical: vertical,
+                                                    threePlayerMode: true) == (loserIndex == 3 ? nil : loserIndex))
+                }
+            }
+        }
+        precondition(RonSwipe.loserIndex(winnerIndex: 0, horizontal: 1, vertical: 0, threePlayerMode: false) == 1)
+        precondition(RonSwipe.loserIndex(winnerIndex: 0, horizontal: -1, vertical: 0, threePlayerMode: false) == 3)
+        precondition(RonSwipe.loserIndex(winnerIndex: 1, horizontal: 0, vertical: -1, threePlayerMode: false) == 2)
+        precondition(RonSwipe.loserIndex(winnerIndex: 1, horizontal: 0, vertical: 1, threePlayerMode: false) == 0)
+        precondition(RonSwipe.loserIndex(winnerIndex: 2, horizontal: -1, vertical: 0, threePlayerMode: false) == 3)
+        precondition(RonSwipe.loserIndex(winnerIndex: 2, horizontal: 1, vertical: 0, threePlayerMode: false) == 1)
+        precondition(RonSwipe.loserIndex(winnerIndex: 3, horizontal: 0, vertical: -1, threePlayerMode: false) == 2)
+        precondition(RonSwipe.loserIndex(winnerIndex: 3, horizontal: 0, vertical: 1, threePlayerMode: false) == 0)
+        precondition(RonSwipe.loserIndex(winnerIndex: 0, horizontal: -1, vertical: 0, threePlayerMode: true) == nil)
+        precondition(RonSwipe.loserIndex(winnerIndex: 0, horizontal: 0, vertical: 1, threePlayerMode: false) == nil)
+        precondition(RonSwipe.loserIndex(winnerIndex: 0, horizontal: 0, vertical: 0, threePlayerMode: false) == nil)
         var historyPlayers = initialPlayers
         historyPlayers[1].riichi = true
         historyPlayers[1].score -= 1000

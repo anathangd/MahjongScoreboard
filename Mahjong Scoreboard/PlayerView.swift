@@ -27,6 +27,7 @@ struct PlayerView: View {
     let loserWind: String
     let sleepDelay: Double
     let onRon: () -> Void
+    let onRonSwipe: (CGSize) -> Void
     let onTsumo: () -> Void
     let onMultipleRon: () -> Void
     let onToggleRiichi: () -> Void
@@ -105,6 +106,11 @@ struct PlayerView: View {
             }
             .foregroundStyle(playerDisabled ? .black : .blue)
             .disabled(playerDisabled || timerOn || scoresAreChanging)
+            .highPriorityGesture(
+                DragGesture(minimumDistance: 25, coordinateSpace: .global)
+                    .onEnded { value in onRonSwipe(value.translation) },
+                including: playerDisabled || timerOn || scoresAreChanging ? .none : .all
+            )
         }
     }
 
@@ -132,6 +138,7 @@ struct PlayerView: View {
         loserWind: "",
         sleepDelay: 0,
         onRon: {},
+        onRonSwipe: { _ in },
         onTsumo: {},
         onMultipleRon: {},
         onToggleRiichi: {}
