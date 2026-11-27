@@ -16,8 +16,8 @@ struct Yaku: Identifiable {
 let yakuList: [Yaku] = [
     Yaku(han: "1 Han (Closed)", entries: [
         "門前自摸 (めんぜんつも) (**Tsumo, Fully Concealed Hand**) - self draw",
-        "立直 (リーチ) (**Riichi**) - no pon or chii",
-        "一発 (イッパツ) (**Ippatsu**) - win within first rotation after riichi, also can't be interrupted by tile calls",
+        "立直 (リーチ) (**Riichi**) - declaring Riichi with a closed hand (no open calls) that is one tile away from winning (Tenpai). Requires a 1,000-point deposit in the Riichi slot. After declaring Riichi, the hand is locked. A Closed Kan (暗槓) may be declared using a newly drawn fourth tile, provided it does not change the winning tiles or the hand's structure. In three-player mahjong, a newly drawn North tile may also be extracted (北抜き)",
+        "一発 (イッパツ) (**Ippatsu**) - win within first rotation after riichi, can't be interrupted by tile calls",
         "平和 (ピンフ) (**Pinfu**) - all sequences and must end with a two-sided wait",
         "一盃口 (イーペイコー) (**Pure Double Sequence**) - 112233 kind of double sequence"
     ]),
@@ -25,12 +25,12 @@ let yakuList: [Yaku] = [
         "海底撈月 (ハイテイラオユエ) (**Under the Sea**) - Tsumo with the last drawn tile from the wall",
         "河底撈魚 (ホウテイラオユイ) (**Under the River**) - Ron with the last discarded tile",
         "嶺上開花 (リンシャンカイホウ) (**After a Kan**) - win with a tile drawn from the dead wall immediately after calling a Kan",
-        "搶槓 (チャンカン) (**Robbing a Kan**) - calling Ron on a tile used to make an Added Kan (加槓). A Closed Kan (暗槓) normally cannot be robbed, except to complete Thirteen Orphans",
+        "搶槓 (チャンカン) (**Robbing a Kan**) - winning by Ron on a tile another player uses to form an Added Kan (加槓). A Closed Kan (暗槓) normally cannot be robbed, except to complete Thirteen Orphans in rulesets that allow it",
         "断幺九 (タンヤオ) (**All Simples**) - winning with no honor or terminal tiles (2-8 number tiles only)",
         "役牌 (やくはい) - a hand with at least one group of dragon, round wind, or seat wind tiles"
     ]),
     Yaku(han: "2 Han", entries: [
-        "両立直 (ダブリー) (**Double Riichi**) - declare Riichi with your starting hand before any tiles are called",
+        "両立直 (ダブリー) (**Double Riichi**) - declare Riichi with your starting hand **before any tiles are called**",
         "全帯幺九 (チャンタ) (**Half Outside Hand**) - every sequence, triplet and pair contains at least one terminal tile or honor tiles (-1 Han if open)",
         "三色同順 (サンショクドウジュン) (**Mixed Triple Sequence**) - three sequences with the same numbers across the three suits (-1 Han if open)",
         "一気通貫 (イッキツウカン) (**Pure Straight**) - complete sequence 1–9 (-1 Han if open)",
@@ -74,6 +74,9 @@ let yakuList: [Yaku] = [
         "大四喜 (ダイスーシー) (**Big Four Winds**) - four triplets/quads of all four winds",
         "大七星 (ダイチーシン) - Seven Pairs of all the winds and dragons (tsumo only)",
         
+    ]),
+    Yaku(han: "House Yaku", entries: [
+        "全副露 (ゼンフーロ) (**Fully Open Hand**) - four exposed melds, winning by Ron on the final pair"
     ])
 ]
 

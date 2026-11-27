@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVFoundation
+import UIKit
 
 /// Lists every riichi sound in the random pool — the bundled ones plus the
 /// sounds the user imported or recorded. Bundled sounds can be previewed;
@@ -23,6 +24,7 @@ struct RiichiSoundsOverlay: View {
     @State private var showRenameAlert = false
     @State private var renameError: String?
     @State private var showImporter = false
+    @State private var showShareSheet = false
     @State private var importError: String?
     @State private var deletingSound: RiichiSound?
 
@@ -71,7 +73,19 @@ struct RiichiSoundsOverlay: View {
                         .padding(.leading, 24)
                         .padding(.top, 50)
 
+                        Button {
+                            stopPreview()
+                            showShareSheet = true
+                        } label: {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.system(size: 27))
+                                .foregroundStyle(.white)
+                        }
+                        .accessibilityLabel("Share sounds nearby")
+                        .padding(.top, 50)
+
                         Spacer()
+
 
                         Button {
                             stopPreview()
@@ -91,31 +105,55 @@ struct RiichiSoundsOverlay: View {
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.white.opacity(0.75))
 
-                ScrollView {
-                    VStack(spacing: 0) {
-                        if store.customSounds.isEmpty {
-                            Text("No custom sounds yet")
-                                .font(.system(size: 18))
-                                .foregroundStyle(.white.opacity(0.6))
-                                .padding(.vertical, 14)
-                        }
+                List {
+                    if store.customSounds.isEmpty {
+                        Text("No custom sounds yet")
+                            .font(.system(size: 18))
+                            .foregroundStyle(.white.opacity(0.6))
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                    }
 
-                        ForEach(store.customSounds) { sound in
-                            soundRow(sound)
-                        }
+                    ForEach(store.customSounds) { sound in
+                        soundRow(sound)
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                Button {
+                                    deletingSound = sound
+                                } label: {
+                                    Label("delete", systemImage: "trash")
+                                }
+                                .tint(.red)
 
-                        if !store.customSounds.isEmpty {
-                            Text("built in")
-                                .font(.system(size: 14))
-                                .foregroundStyle(.white.opacity(0.5))
-                                .padding(.top, 18)
-                        }
+                                Button {
+                                    startRename(of: sound)
+                                } label: {
+                                    Label("edit", systemImage: "pencil")
+                                }
+                                .tint(.blue)
+                            }
+                    }
 
-                        ForEach(store.sounds.filter(\.isBundled)) { sound in
-                            soundRow(sound)
-                        }
+                    if !store.customSounds.isEmpty {
+                        Text("built in")
+                            .font(.system(size: 14))
+                            .foregroundStyle(.white.opacity(0.5))
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                    }
+
+                    ForEach(store.sounds.filter(\.isBundled)) { sound in
+                        soundRow(sound)
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
                     }
                 }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .background(Color.clear)
 
                 Spacer()
 
@@ -175,6 +213,9 @@ struct RiichiSoundsOverlay: View {
                 print("riichi sound import failed: \(error)")
             }
         }
+        .sheet(isPresented: $showShareSheet) {
+            NearbyRiichiShareView(store: store)
+        }
     }
 
     private func soundRow(_ sound: RiichiSound) -> some View {
@@ -203,24 +244,11 @@ struct RiichiSoundsOverlay: View {
                         Image(systemName: isEnabled ? "checkmark.square.fill" : "square")
                             .font(.system(size: 24))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.borderless)
                     .accessibilityLabel(isEnabled ? "Disable \(sound.displayName)" : "Enable \(sound.displayName)")
-                } else {
-                    Button {
-                        startRename(of: sound)
-                    } label: {
-                        Image(systemName: "pencil")
-                            .font(.system(size: 22))
-                    }
-
-                    Button {
-                        deletingSound = sound
-                    } label: {
-                        Image(systemName: "trash")
-                            .font(.system(size: 22))
-                    }
                 }
             }
+            .buttonStyle(.borderless)
             .foregroundStyle(sound.isBundled && !isEnabled ? .white.opacity(0.4) : .white)
             .padding(.horizontal, 30)
             .padding(.vertical, 12)
@@ -287,5 +315,132 @@ struct RiichiSoundsOverlay: View {
             stopPreview()
         }
         store.delete(sound.url)
+    }
+}
+
+private struct NearbyRiichiShareView: View {
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var transfer: NearbyRiichiSoundTransfer
+    private let soundCount: Int
+
+    init(store: RiichiSoundStore) {
+        _transfer = StateObject(wrappedValue: NearbyRiichiSoundTransfer(store: store))
+        soundCount = store.customSounds.count
+    }
+
+    private var hasPendingInvitation: Binding<Bool> {
+        Binding(
+            get: { transfer.pendingInvitation != nil },
+            set: { if !$0 { transfer.respondToInvitation(accept: false) } }
+        )
+    }
+
+    private var hasLocalNetworkAccessIssue: Binding<Bool> {
+        Binding(
+            get: { transfer.localNetworkAccessIssue != nil },
+            set: { if !$0 { transfer.dismissLocalNetworkAccessIssue() } }
+        )
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 12) {
+                Text("Nearby riichi sounds")
+                    .font(.title2.weight(.semibold))
+
+                Text(soundCount == 0 ? "No custom sounds to send" : "\(soundCount) custom sounds ready to share")
+                    .foregroundStyle(.secondary)
+
+                if transfer.discoveredPeers.isEmpty {
+                    ContentUnavailableView(
+                        "Looking for players",
+                        systemImage: "dot.radiowaves.left.and.right",
+                        description: Text("Keep both Share screens open and phones nearby. Wi-Fi and Bluetooth should be enabled.")
+                    )
+                } else {
+                    List(transfer.discoveredPeers, id: \.self) { peer in
+                        Button {
+                            transfer.share(with: peer)
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(peer.displayName)
+                                        .foregroundStyle(.primary)
+                                    Text("\(transfer.peerSoundCounts[peer, default: 0]) sounds available")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Image(systemName: "arrow.up.forward.circle")
+                            }
+                        }
+                        .disabled(soundCount == 0 || transfer.isTransferring)
+                    }
+                    .listStyle(.plain)
+                }
+
+                Text(transfer.status)
+                    .font(.footnote)
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal)
+
+                DisclosureGroup("Connection details") {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 6) {
+                            ForEach(Array(transfer.diagnostics.enumerated()), id: \.offset) { entry in
+                                Text(entry.element)
+                                    .font(.caption2.monospaced())
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                        }
+                        .padding(.vertical, 6)
+                    }
+                    .frame(maxHeight: 140)
+                }
+                .font(.footnote)
+                .padding(.horizontal)
+
+                Spacer(minLength: 0)
+            }
+            .padding(.top)
+            .navigationTitle("Share sounds")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") { dismiss() }
+                        .disabled(transfer.isTransferring)
+                }
+            }
+        }
+        .task { transfer.start() }
+        .onDisappear { transfer.stop() }
+        .interactiveDismissDisabled(transfer.isTransferring)
+        .alert(
+            "Accept sound transfer?",
+            isPresented: hasPendingInvitation
+        ) {
+            Button("Accept") {
+                transfer.respondToInvitation(accept: true)
+            }
+            Button("Decline", role: .cancel) {
+                transfer.respondToInvitation(accept: false)
+            }
+        } message: {
+            Text("\(transfer.pendingInvitation?.displayName ?? "A nearby player") wants to send \(transfer.pendingInvitationSoundCount) sounds.")
+        }
+        .alert("Nearby access unavailable", isPresented: hasLocalNetworkAccessIssue) {
+            Button("Open Settings") {
+                transfer.dismissLocalNetworkAccessIssue()
+                if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(settingsURL)
+                }
+            }
+            Button("OK", role: .cancel) {
+                transfer.dismissLocalNetworkAccessIssue()
+            }
+        } message: {
+            Text(transfer.localNetworkAccessIssue ?? "")
+        }
     }
 }

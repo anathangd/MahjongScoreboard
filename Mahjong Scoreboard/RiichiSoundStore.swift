@@ -8,6 +8,8 @@
 import Foundation
 import AVFoundation
 import Combine
+import MultipeerConnectivity
+import UIKit
 
 /// One riichi sound effect: either bundled with the app or added by the user.
 struct RiichiSound: Identifiable, Equatable {
@@ -102,12 +104,31 @@ class RiichiSoundStore: ObservableObject {
 
     /// Copies an external audio file (from the document picker) into the sounds
     /// directory, after checking it against the import limits.
-    func importSound(from sourceURL: URL) throws {
+    @discardableResult
+    func importSound(
+        from sourceURL: URL,
+        named suppliedName: String? = nil,
+        skippingDuplicateNames: Bool = false
+    ) throws -> Bool {
         let accessing = sourceURL.startAccessingSecurityScopedResource()
         defer {
             if accessing {
                 sourceURL.stopAccessingSecurityScopedResource()
             }
+        }
+
+        let fileName = URL(fileURLWithPath: suppliedName ?? sourceURL.lastPathComponent).lastPathComponent
+        let pathExtension = URL(fileURLWithPath: fileName).pathExtension.lowercased()
+        guard Self.supportedExtensions.contains(pathExtension) else {
+            throw SoundImportError.unreadableFile
+        }
+
+        let incomingBaseName = URL(fileURLWithPath: fileName).deletingPathExtension().lastPathComponent
+        if skippingDuplicateNames,
+           customSounds.contains(where: {
+               $0.name.localizedCaseInsensitiveCompare(incomingBaseName) == .orderedSame
+           }) {
+            return false
         }
 
         guard customSounds.count < Self.maxCustomSounds else {
@@ -129,9 +150,10 @@ class RiichiSoundStore: ObservableObject {
             throw SoundImportError.tooLong
         }
 
-        let destination = uniqueDestinationURL(for: sourceURL.lastPathComponent)
+        let destination = uniqueDestinationURL(for: fileName)
         try FileManager.default.copyItem(at: sourceURL, to: destination)
         refresh()
+        return true
     }
 
     /// Deletes a custom sound from the sounds directory.
@@ -171,6 +193,419 @@ class RiichiSoundStore: ObservableObject {
             counter += 1
         }
         return candidate
+    }
+}
+
+/// Discovers nearby app users and transfers validated custom riichi sounds.
+final class NearbyRiichiSoundTransfer: NSObject, ObservableObject {
+    @Published private(set) var discoveredPeers: [MCPeerID] = []
+    @Published private(set) var peerSoundCounts: [MCPeerID: Int] = [:]
+    @Published private(set) var pendingInvitation: MCPeerID?
+    @Published private(set) var pendingInvitationSoundCount = 0
+    @Published private(set) var status = "Looking for nearby players..."
+    @Published private(set) var isTransferring = false
+    @Published private(set) var localNetworkAccessIssue: String?
+    @Published private(set) var diagnostics: [String] = []
+
+    private static let serviceType = "mahjong-riichi"
+    private let store: RiichiSoundStore
+    private let peerID = MCPeerID(displayName: UIDevice.current.name)
+    private var session: MCSession!
+    private var advertiser: MCNearbyServiceAdvertiser?
+    private var browser: MCNearbyServiceBrowser?
+    private var invitationHandler: ((Bool, MCSession?) -> Void)?
+    private var outgoingPeer: MCPeerID?
+    private var incomingPeer: MCPeerID?
+    private var outgoingFiles: [RiichiSound] = []
+    private var nextOutgoingIndex = 0
+    private var sentCount = 0
+    private var sendFailureCount = 0
+    private var expectedIncomingCount = 0
+    private var processedIncomingCount = 0
+    private var importedCount = 0
+    private var skippedCount = 0
+    private var receiveFailureCount = 0
+    private var receivedFinishMessage = false
+    private var discoveryTimer: Timer?
+    private var transferStage = "nearby discovery"
+
+    init(store: RiichiSoundStore) {
+        self.store = store
+        session = MCSession(peer: peerID, securityIdentity: nil, encryptionPreference: .required)
+        super.init()
+        session.delegate = self
+    }
+
+    func start() {
+        guard browser == nil, advertiser == nil else { return }
+        let discoveryInfo = ["soundCount": String(store.customSounds.count)]
+        advertiser = MCNearbyServiceAdvertiser(
+            peer: peerID,
+            discoveryInfo: discoveryInfo,
+            serviceType: Self.serviceType
+        )
+        browser = MCNearbyServiceBrowser(peer: peerID, serviceType: Self.serviceType)
+        advertiser?.delegate = self
+        browser?.delegate = self
+        advertiser?.startAdvertisingPeer()
+        browser?.startBrowsingForPeers()
+        status = "Looking for nearby players..."
+        transferStage = "nearby discovery"
+        recordDiagnostic("Started discovery; Wi-Fi and Bluetooth should be enabled.")
+        discoveryTimer?.invalidate()
+        discoveryTimer = Timer.scheduledTimer(withTimeInterval: 12, repeats: false) { [weak self] _ in
+            DispatchQueue.main.async {
+                guard let self, self.discoveredPeers.isEmpty else { return }
+                self.status = "No nearby player found yet. Keep both phones close with Share open, and check Wi-Fi, Bluetooth, and Local Network access."
+                self.recordDiagnostic("No peer discovered after 12 seconds.")
+            }
+        }
+    }
+
+    func stop() {
+        discoveryTimer?.invalidate()
+        discoveryTimer = nil
+        advertiser?.stopAdvertisingPeer()
+        browser?.stopBrowsingForPeers()
+        advertiser = nil
+        browser = nil
+        respondToInvitation(accept: false)
+        session.disconnect()
+        discoveredPeers = []
+        peerSoundCounts = [:]
+    }
+
+    func dismissLocalNetworkAccessIssue() {
+        localNetworkAccessIssue = nil
+    }
+
+    private func recordDiagnostic(_ event: String) {
+        let timestamp = Date.now.formatted(date: .omitted, time: .standard)
+        diagnostics.append("[\(timestamp)] \(event)")
+        if diagnostics.count > 16 {
+            diagnostics.removeFirst(diagnostics.count - 16)
+        }
+    }
+
+    private func describe(_ error: Error) -> String {
+        let details = error as NSError
+        return "\(error.localizedDescription) (\(details.domain), code \(details.code))"
+    }
+
+    func share(with peer: MCPeerID) {
+        guard !store.customSounds.isEmpty else {
+            status = "There are no custom sounds to share."
+            return
+        }
+        outgoingFiles = store.customSounds
+        outgoingPeer = peer
+        nextOutgoingIndex = 0
+        sentCount = 0
+        sendFailureCount = 0
+        isTransferring = true
+        transferStage = "waiting for invitation acceptance"
+        status = "Asking \(peer.displayName) to accept..."
+        recordDiagnostic("Sent invitation to \(peer.displayName) for \(outgoingFiles.count) sound(s).")
+        let context = Data(String(outgoingFiles.count).utf8)
+        browser?.invitePeer(peer, to: session, withContext: context, timeout: 60)
+    }
+
+    func respondToInvitation(accept: Bool) {
+        guard let invitationHandler else { return }
+        self.invitationHandler = nil
+        let invitedPeer = pendingInvitation
+        let acceptedCount = pendingInvitationSoundCount
+        pendingInvitation = nil
+        pendingInvitationSoundCount = 0
+        if accept {
+            incomingPeer = invitedPeer
+            expectedIncomingCount = acceptedCount
+            processedIncomingCount = 0
+            importedCount = 0
+            skippedCount = 0
+            receiveFailureCount = 0
+            receivedFinishMessage = false
+            isTransferring = true
+            transferStage = "joining the sender's session"
+            status = "Connecting..."
+            recordDiagnostic("Accepted invitation from \(invitedPeer?.displayName ?? "nearby player").")
+        } else {
+            recordDiagnostic("Declined or dismissed an incoming invitation.")
+        }
+        invitationHandler(accept, accept ? session : nil)
+    }
+
+    private func sendNextResource() {
+        guard let peer = outgoingPeer else { return }
+        guard nextOutgoingIndex < outgoingFiles.count else {
+            let completionMessage = Data("finished|\(sentCount)|\(sendFailureCount)".utf8)
+            do {
+                try session.send(completionMessage, toPeers: [peer], with: .reliable)
+                transferStage = "waiting for receiver import acknowledgment"
+                status = "Waiting for \(peer.displayName) to finish importing..."
+            } catch {
+                status = "Could not send completion message: \(describe(error))"
+                recordDiagnostic("Completion message failed: \(describe(error)).")
+                isTransferring = false
+                outgoingPeer = nil
+                outgoingFiles = []
+            }
+            return
+        }
+
+        let sound = outgoingFiles[nextOutgoingIndex]
+        nextOutgoingIndex += 1
+        transferStage = "sending \(sound.url.lastPathComponent)"
+        recordDiagnostic("Sending \(sound.url.lastPathComponent).")
+        session.sendResource(at: sound.url, withName: sound.url.lastPathComponent, toPeer: peer) { [weak self] error in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                if let error {
+                    self.sendFailureCount += 1
+                    self.recordDiagnostic("Sending \(sound.url.lastPathComponent) failed: \(self.describe(error)).")
+                } else {
+                    self.sentCount += 1
+                }
+                self.status = "Sending sound \(self.nextOutgoingIndex) of \(self.outgoingFiles.count)..."
+                self.sendNextResource()
+            }
+        }
+    }
+
+    private func finishIncomingTransferIfReady() {
+        guard receivedFinishMessage, processedIncomingCount >= expectedIncomingCount else { return }
+        var summary = "Received \(importedCount) sound\(importedCount == 1 ? "" : "s")"
+        if skippedCount > 0 {
+            summary += ", skipped \(skippedCount) duplicate\(skippedCount == 1 ? "" : "s")"
+        }
+        let totalFailures = receiveFailureCount
+        if totalFailures > 0 {
+            summary += ", \(totalFailures) could not be imported"
+        }
+        summary += "."
+        if let incomingPeer {
+            do {
+                let acknowledgement = Data(
+                    "received|\(importedCount)|\(skippedCount)|\(totalFailures)".utf8
+                )
+                try session.send(acknowledgement, toPeers: [incomingPeer], with: .reliable)
+                status = summary
+            } catch {
+                status = summary + " Sender could not be notified."
+            }
+        } else {
+            status = summary
+        }
+        incomingPeer = nil
+        isTransferring = false
+    }
+}
+
+extension NearbyRiichiSoundTransfer: MCNearbyServiceAdvertiserDelegate {
+    func advertiser(
+        _ advertiser: MCNearbyServiceAdvertiser,
+        didReceiveInvitationFromPeer peerID: MCPeerID,
+        withContext context: Data?,
+        invitationHandler: @escaping (Bool, MCSession?) -> Void
+    ) {
+        let count = context.flatMap { Int(String(decoding: $0, as: UTF8.self)) } ?? 0
+        DispatchQueue.main.async {
+            guard self.invitationHandler == nil else {
+                invitationHandler(false, nil)
+                self.recordDiagnostic("Declined an additional invitation while handling another request.")
+                return
+            }
+            self.invitationHandler = invitationHandler
+            self.pendingInvitation = peerID
+            self.pendingInvitationSoundCount = count
+            self.recordDiagnostic("Received invitation from \(peerID.displayName) for \(count) sound(s).")
+        }
+    }
+
+    func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
+        DispatchQueue.main.async {
+            self.status = "Could not advertise: \(self.describe(error))"
+            self.recordDiagnostic("Advertising failed: \(self.describe(error)).")
+            self.localNetworkAccessIssue = "Nearby sharing could not start. Local Network access may be off. Check Settings > Privacy & Security > Local Network, and make sure Wi-Fi and Bluetooth are enabled."
+        }
+    }
+}
+
+extension NearbyRiichiSoundTransfer: MCNearbyServiceBrowserDelegate {
+    func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String: String]?) {
+        DispatchQueue.main.async {
+            if !self.discoveredPeers.contains(peerID) {
+                self.discoveredPeers.append(peerID)
+                self.discoveryTimer?.invalidate()
+                self.discoveryTimer = nil
+                self.recordDiagnostic("Discovered \(peerID.displayName) with \(info?["soundCount"] ?? "unknown") sound(s).")
+            }
+            self.peerSoundCounts[peerID] = Int(info?["soundCount"] ?? "") ?? 0
+        }
+    }
+
+    func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
+        DispatchQueue.main.async {
+            self.discoveredPeers.removeAll { $0 == peerID }
+            self.peerSoundCounts.removeValue(forKey: peerID)
+            self.recordDiagnostic("Lost discovery of \(peerID.displayName).")
+        }
+    }
+
+    func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
+        DispatchQueue.main.async {
+            self.status = "Could not find nearby players: \(self.describe(error))"
+            self.recordDiagnostic("Browsing failed: \(self.describe(error)).")
+            self.localNetworkAccessIssue = "Nearby player discovery could not start. Local Network access may be off. Check Settings > Privacy & Security > Local Network, and make sure Wi-Fi and Bluetooth are enabled."
+        }
+    }
+}
+
+extension NearbyRiichiSoundTransfer: MCSessionDelegate {
+    func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
+        DispatchQueue.main.async {
+            switch state {
+            case .connected:
+                self.recordDiagnostic("Session connected to \(peerID.displayName).")
+                if peerID == self.outgoingPeer {
+                    self.transferStage = "connected; preparing sounds"
+                    self.status = "Connected. Preparing sounds..."
+                    self.sendNextResource()
+                } else {
+                    self.transferStage = "connected; waiting for sender data"
+                    self.status = "Connected to \(peerID.displayName). Waiting for sounds..."
+                }
+            case .connecting:
+                self.transferStage = "connecting to \(peerID.displayName)"
+                self.recordDiagnostic("Session connecting to \(peerID.displayName).")
+                self.status = "Connecting to \(peerID.displayName)..."
+            case .notConnected:
+                if self.isTransferring {
+                    self.status = "Connection to \(peerID.displayName) ended during \(self.transferStage). Keep both phones close, Share open, and Wi-Fi and Bluetooth enabled."
+                    self.recordDiagnostic("Session disconnected from \(peerID.displayName) during \(self.transferStage).")
+                    self.isTransferring = false
+                }
+            @unknown default:
+                break
+            }
+        }
+    }
+
+    func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
+        let parts = String(decoding: data, as: UTF8.self).split(separator: "|")
+        guard let messageType = parts.first else { return }
+        DispatchQueue.main.async {
+            switch messageType {
+            case "finished" where parts.count >= 3:
+                self.expectedIncomingCount = Int(parts[1]) ?? self.processedIncomingCount
+                self.receiveFailureCount += Int(parts[2]) ?? 0
+                self.receivedFinishMessage = true
+                self.transferStage = "processing received sounds"
+                self.recordDiagnostic("Sender finished uploading \(parts[1]) sound(s); processing received files.")
+                self.finishIncomingTransferIfReady()
+            case "received" where parts.count >= 4:
+                self.status = "Transfer complete. Imported \(parts[1]), skipped \(parts[2]), failed \(parts[3])."
+                self.recordDiagnostic("Receiver confirmed: imported \(parts[1]), skipped \(parts[2]), failed \(parts[3]).")
+                self.isTransferring = false
+                self.outgoingPeer = nil
+                self.outgoingFiles = []
+            default:
+                break
+            }
+        }
+    }
+
+    func session(
+        _ session: MCSession,
+        didReceive stream: InputStream,
+        withName streamName: String,
+        fromPeer peerID: MCPeerID
+    ) {}
+
+    func session(
+        _ session: MCSession,
+        didStartReceivingResourceWithName resourceName: String,
+        fromPeer peerID: MCPeerID,
+        with progress: Progress
+    ) {
+        DispatchQueue.main.async {
+            self.transferStage = "receiving \(resourceName)"
+            self.status = "Receiving \(resourceName)..."
+            self.recordDiagnostic("Started receiving \(resourceName).")
+        }
+    }
+
+    func session(
+        _ session: MCSession,
+        didFinishReceivingResourceWithName resourceName: String,
+        fromPeer peerID: MCPeerID,
+        at localURL: URL?,
+        withError error: Error?
+    ) {
+        var stagedURL: URL?
+        var stagingError: Error?
+        if error == nil, let localURL {
+            let pathExtension = URL(fileURLWithPath: resourceName).pathExtension
+            let temporaryURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent("riichi_share_\(UUID().uuidString)")
+                .appendingPathExtension(pathExtension)
+            do {
+                try FileManager.default.copyItem(at: localURL, to: temporaryURL)
+                stagedURL = temporaryURL
+            } catch {
+                stagingError = error
+            }
+        }
+
+        DispatchQueue.main.async {
+            defer {
+                if let stagedURL {
+                    try? FileManager.default.removeItem(at: stagedURL)
+                }
+            }
+            self.processedIncomingCount += 1
+            if let error {
+                self.receiveFailureCount += 1
+                self.status = "Could not receive \(resourceName): \(self.describe(error))"
+                self.recordDiagnostic("Receiving \(resourceName) failed: \(self.describe(error)).")
+            } else if let stagingError {
+                self.receiveFailureCount += 1
+                self.status = "Could not stage \(resourceName): \(self.describe(stagingError))"
+                self.recordDiagnostic("Staging \(resourceName) failed: \(self.describe(stagingError)).")
+            } else if let stagedURL {
+                do {
+                    let imported = try self.store.importSound(
+                        from: stagedURL,
+                        named: resourceName,
+                        skippingDuplicateNames: true
+                    )
+                    if imported {
+                        self.importedCount += 1
+                        self.recordDiagnostic("Imported \(resourceName).")
+                    } else {
+                        self.skippedCount += 1
+                        self.recordDiagnostic("Skipped duplicate \(resourceName).")
+                    }
+                } catch {
+                    self.receiveFailureCount += 1
+                    self.status = "Could not import \(resourceName): \(self.describe(error))"
+                    self.recordDiagnostic("Importing \(resourceName) failed: \(self.describe(error)).")
+                }
+            } else {
+                self.receiveFailureCount += 1
+                self.status = "Could not receive \(resourceName)."
+            }
+            self.finishIncomingTransferIfReady()
+        }
+    }
+
+    func session(
+        _ session: MCSession,
+        didReceive certificate: [Any]?,
+        fromPeer peerID: MCPeerID,
+        certificateHandler: @escaping (Bool) -> Void
+    ) {
+        certificateHandler(true)
     }
 }
 
