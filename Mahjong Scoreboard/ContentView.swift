@@ -57,6 +57,9 @@ struct ContentView: View {
     @State var displayResultsScreen = false //for displaying results screen!
     @State private var editingResultPlayerID: UUID?
     @State private var resultNameDraft = ""
+    @State private var roundHistory: [RoundHistoryEntry] = []
+    @State private var showHistory = false
+    @State private var historyEntryToRevert: UUID?
     
     @State var newArr: [Player] = [
         Player(name: "player1", score: 25000, wind: "東", winner: false, loser: false, tenpai: false, riichi: false),
@@ -225,19 +228,20 @@ struct ContentView: View {
                             .padding(.top, -5)
                             .foregroundColor(.black)
                     }
+                            .disabled(scoresAreChanging)
                     Button {
                         exhaust = true
                     } label: {
                         Image(systemName: "x.circle").foregroundColor(.black)
                             .padding()
                     }
-                    .disabled(timerOn ? true : false)
+                    .disabled(timerOn || scoresAreChanging)
                     Button {
                         displayResults()
                     } label: {
                         Image(systemName: "line.3.horizontal").foregroundColor(.black)
                             .padding(5)
-                    }.disabled(timerOn ? true : false)
+                    }.disabled(timerOn || scoresAreChanging)
                     
                     
                 }
@@ -819,24 +823,142 @@ struct ContentView: View {
                 }
                 .foregroundColor(.white)
                 .padding(40)
+
+                VStack { 
+                    Spacer()
+                    Button {
+                        finishResultsNameEdit()
+                        showHistory = true
+                    } label: {
+                        Label("Show history", systemImage: "clock.arrow.circlepath")
+                    }
+                    .font(.title3)
+                    .padding(.bottom, 30)
+                    .disabled(scoresAreChanging)
+                }
             }
             .ignoresSafeArea()
-            .alert(
-                "Change player name",
+            .background(PlayerNameAlert(
                 isPresented: Binding(
                     get: { editingResultPlayerID != nil },
                     set: { if !$0 { editingResultPlayerID = nil } }
-                )
-            ) {
-                TextField("Name", text: $resultNameDraft)
-                Button("save") {
+                ),
+                name: resultNameDraft,
+                onSave: { name in
+                    resultNameDraft = name
                     finishResultsNameEdit()
-                }
-                Button("cancel", role: .cancel) {
+                },
+                onCancel: {
                     editingResultPlayerID = nil
                 }
+            ))
+            .sheet(isPresented: $showHistory) {
+                historyView
             }
         }
+    }
+
+    private var historyView: some View {
+        NavigationStack {
+            List {
+                if roundHistory.isEmpty {
+                    Text("No rounds recorded yet")
+                        .foregroundStyle(.secondary)
+                }
+                ForEach(roundHistory) { entry in
+                    let riichiPlayers = entry.riichiPlayers(currentPlayers: playerList)
+                    let changes = entry.changes(currentPlayers: playerList)
+                    DisclosureGroup {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Riichi")
+                                .font(.headline)
+                            if riichiPlayers.isEmpty {
+                                Text("None")
+                                    .foregroundStyle(.secondary)
+                            } else {
+                                ForEach(riichiPlayers, id: \.self) { player in
+                                    Text("\(player): −1,000")
+                                }
+                            }
+                            Text("Score changes")
+                                .font(.headline)
+                            if changes.isEmpty {
+                                Text("None")
+                                    .foregroundStyle(.secondary)
+                            } else {
+                                ForEach(changes, id: \.self) { change in
+                                    Text(change)
+                                        .monospacedDigit()
+                                }
+                            }
+                            Button("Revert to before this round", role: .destructive) {
+                                historyEntryToRevert = entry.id
+                            }
+                            .disabled(scoresAreChanging)
+                            .padding(.top, 8)
+                        }
+                        .padding(.vertical, 8)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(entry.round)
+                                .font(.headline)
+                            ForEach(entry.summary(currentPlayers: playerList), id: \.self) { line in
+                                Text(line)
+                                    .font(.subheadline)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+            }
+            .navigationTitle("History")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { showHistory = false }
+                }
+            }
+            .alert("Revert back to before this round? Subsequent round history will be lost.",
+                   isPresented: Binding(
+                    get: { historyEntryToRevert != nil },
+                    set: { if !$0 { historyEntryToRevert = nil } }
+                   )) {
+                Button("Revert", role: .destructive) {
+                    if let id = historyEntryToRevert { revertRound(id: id) }
+                    historyEntryToRevert = nil
+                }
+                Button("Cancel", role: .cancel) { historyEntryToRevert = nil }
+            }
+        }
+    }
+
+    private func recordRound(_ result: RoundHistoryEntry.Result, plan: ScoreApplicationPlan) {
+        roundHistory.append(RoundHistoryEntry(
+            players: playerList, winds: windsList, roundWind: roundWind, extraRounds: extraRounds,
+            honbaCount: honbaCount, riichiPot: riichiPot, threePlayerMode: threePlayerMode,
+            result: result, plan: plan
+        ))
+    }
+
+    private func revertRound(id: UUID) {
+        guard !scoresAreChanging, let index = roundHistory.firstIndex(where: { $0.id == id }) else { return }
+        let entry = roundHistory[index]
+        playerList = entry.playersBeforeRound(currentPlayers: playerList)
+        windsList = entry.windsBeforeRound
+        roundWind = entry.roundWind
+        extraRounds = entry.extraRounds
+        honbaCount = entry.honbaCount
+        riichiPot = entry.riichiPotBeforeRound
+        riichiPotIndicator = riichiPot / 1000
+        winner = ""
+        loser = ""
+        selectedLoser = nil
+        han = 1
+        fu = 20
+        addingFu = 20
+        roundHistory.removeSubrange(index...)
+        showHistory = false
+        displayResultsScreen = false
     }
 
     private func startResultsNameEdit(for player: Player) {
@@ -1059,6 +1181,7 @@ struct ContentView: View {
             honbaCount: honbaCount,
             threePlayerMode: threePlayerMode
         )
+        recordRound(.tsumo(winner: winner, han: han, fu: fu, points: winnerPoints), plan: plan)
         applyScoreApplicationPlan(plan)
     }
     
@@ -1093,6 +1216,7 @@ struct ContentView: View {
             loserWind: loser,
             honbaCount: honbaCount
         )
+        recordRound(.ron(winner: winner, loser: loser, han: han, fu: fu, points: winnerPoints), plan: plan)
         applyScoreApplicationPlan(plan)
     }
     
@@ -1105,6 +1229,7 @@ struct ContentView: View {
             breakdown: breakdown,
             honbaCount: honbaCount
         )
+        recordRound(.multipleRon(breakdown, honbaCount: honbaCount, threePlayerMode: threePlayerMode), plan: plan)
         applyScoreApplicationPlan(plan)
     }
 
@@ -1175,6 +1300,7 @@ struct ContentView: View {
             fu: fu,
             addingFu: addingFu
         )
+        recordRound(.exhaustiveDraw, plan: plan)
         applyScoreApplicationPlan(plan)
         
         exhaust = false
@@ -1189,6 +1315,9 @@ struct ContentView: View {
     }
     
     func restart() {
+        roundHistory.removeAll()
+        showHistory = false
+        historyEntryToRevert = nil
         playerNamesShuffleList.removeAll()
         enterPlayer1 = ""
         enterPlayer2 = ""

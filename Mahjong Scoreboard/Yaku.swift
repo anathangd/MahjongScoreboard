@@ -76,7 +76,8 @@ let yakuList: [Yaku] = [
         
     ]),
     Yaku(han: "House Yaku", entries: [
-        "全副露 (ゼンフーロ) (**Fully Open Hand**) - four exposed melds, winning by Ron on the final pair"
+        "全副露 (ゼンフーロ) (**Fully Open Hand**) - 1 han, four exposed melds, winning by Ron on the final pair",
+        "非緑一色 (ヒリョクイーソー) (**All Not Green**) - yakuman, a hand composed entirely of bamboo tiles containing red markings (1, 5, 7, and 9-sou) and Red Dragons (中)"
     ])
 ]
 

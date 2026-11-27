@@ -156,28 +156,58 @@ struct ShowNamesOverlay: View {
             .padding(.horizontal, 10)
         }
         .ignoresSafeArea()
-        .alert(
-            "Change player name",
+        .background(PlayerNameAlert(
             isPresented: Binding(
                 get: { editingPlayerIndex != nil },
                 set: { if !$0 { editingPlayerIndex = nil } }
-            )
-        ) {
-            TextField("Name", text: $nameDraft)
-            Button("save") {
+            ),
+            name: nameDraft,
+            onSave: { name in
                 if let editingPlayerIndex {
-                    playerList[editingPlayerIndex].name = nameDraft
+                    playerList[editingPlayerIndex].name = name
                 }
                 editingPlayerIndex = nil
-            }
-            Button("cancel", role: .cancel) {
+            },
+            onCancel: {
                 editingPlayerIndex = nil
             }
-        }
+        ))
     }
 
     private func startRenamingPlayer(at index: Int) {
         nameDraft = playerList[index].name
         editingPlayerIndex = index
+    }
+}
+
+struct PlayerNameAlert: UIViewControllerRepresentable {
+    @Binding var isPresented: Bool
+    let name: String
+    let onSave: (String) -> Void
+    let onCancel: () -> Void
+
+    func makeUIViewController(context: Context) -> UIViewController {
+        UIViewController()
+    }
+
+    func updateUIViewController(_ controller: UIViewController, context: Context) {
+        guard isPresented, controller.view.window != nil, controller.presentedViewController == nil else { return }
+        let alert = UIAlertController(title: "Change player name", message: nil, preferredStyle: .alert)
+        alert.addTextField { field in
+            field.placeholder = "Name"
+            field.text = name
+            field.autocapitalizationType = .words
+        }
+        alert.addAction(UIAlertAction(title: "save", style: .default) { [weak alert] _ in
+            onSave(alert?.textFields?.first?.text ?? "")
+        })
+        alert.addAction(UIAlertAction(title: "cancel", style: .cancel) { _ in
+            onCancel()
+        })
+        controller.present(alert, animated: true) {
+            guard let field = alert.textFields?.first else { return }
+            field.becomeFirstResponder()
+            field.selectedTextRange = field.textRange(from: field.beginningOfDocument, to: field.endOfDocument)
+        }
     }
 }

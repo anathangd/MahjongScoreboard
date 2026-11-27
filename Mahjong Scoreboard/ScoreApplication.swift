@@ -1,5 +1,111 @@
 import Foundation
 
+struct RoundHistoryEntry: Identifiable {
+    enum Result {
+        case ron(winner: String, loser: String, han: Int, fu: Int, points: Int)
+        case tsumo(winner: String, han: Int, fu: Int, points: Int)
+        case multipleRon(MultipleRonBreakdown, honbaCount: Int, threePlayerMode: Bool)
+        case exhaustiveDraw
+    }
+
+    let id = UUID()
+    let round: String
+    private let playersAtResult: [Player]
+    private let activeCount: Int
+    private let result: Result
+    private let plan: ScoreApplicationPlan
+    let playersBeforeRound: [Player]
+    let windsBeforeRound: [String]
+    let roundWind: String
+    let extraRounds: Bool
+    let honbaCount: Int
+    let riichiPotBeforeRound: Int
+
+    init(players: [Player], winds: [String], roundWind: String, extraRounds: Bool,
+         honbaCount: Int, riichiPot: Int, threePlayerMode: Bool,
+         result: Result, plan: ScoreApplicationPlan) {
+        let activeCount = threePlayerMode ? 3 : players.count
+        let activePlayers = Array(players.prefix(activeCount))
+        let windNames = ["東": "East", "南": "South", "西": "West", "北": "North"]
+        let dealerIndex = activePlayers.firstIndex(where: { $0.wind == "東" }) ?? 0
+        let roundName = "\(windNames[roundWind] ?? roundWind) \(dealerIndex + 1)"
+        round = honbaCount > 0 ? "\(roundName) - \(honbaCount) honba" : roundName
+        playersAtResult = players
+        self.activeCount = activeCount
+        self.result = result
+        self.plan = plan
+        playersBeforeRound = players.enumerated().map { index, player in
+            var restored = player
+            if index < activeCount && restored.riichi { restored.score += 1000 }
+            restored.winner = false
+            restored.loser = false
+            restored.riichi = false
+            restored.tenpai = false
+            restored.multRonWin = false
+            restored.han = 1
+            restored.fu = 20
+            return restored
+        }
+        windsBeforeRound = winds
+        self.roundWind = roundWind
+        self.extraRounds = extraRounds
+        self.honbaCount = honbaCount
+        riichiPotBeforeRound = riichiPot - activePlayers.filter(\.riichi).count * 1000
+    }
+
+    private func label(_ player: Player, currentPlayers: [Player]) -> String {
+        let name = currentPlayers.first(where: { $0.id == player.id })?.name ?? player.name
+        return "\(name) (\(player.wind))"
+    }
+
+    private func pointsText(_ points: Int) -> String {
+        points.formatted(.number.grouping(.automatic))
+    }
+
+    func summary(currentPlayers: [Player]) -> [String] {
+        func playerLabel(_ wind: String) -> String {
+            playersAtResult.prefix(activeCount).first(where: { $0.wind == wind })
+                .map { label($0, currentPlayers: currentPlayers) } ?? wind
+        }
+        switch result {
+        case let .ron(winner, loser, han, fu, points):
+            return ["\(playerLabel(winner)) ron \(playerLabel(loser)) / \(han) han/\(fu) fu / \(pointsText(points))"]
+        case let .tsumo(winner, han, fu, points):
+            return ["\(playerLabel(winner)) tsumo / \(han) han/\(fu) fu / \(pointsText(points))"]
+        case let .multipleRon(breakdown, honbaCount, threePlayerMode):
+            return breakdown.orderedWinnerIndices.map { index in
+                let player = playersAtResult[index]
+                let points = HandScoring.calculateRon(winnerWind: player.wind, han: player.han, fu: player.fu,
+                                                       honbaCount: honbaCount, threePlayerMode: threePlayerMode).winnerPoints
+                return "\(label(player, currentPlayers: currentPlayers)) ron \(playerLabel(breakdown.loserWind)) / \(player.han) han/\(player.fu) fu / \(pointsText(points))"
+            }
+        case .exhaustiveDraw:
+            return ["Exhaustive draw"]
+        }
+    }
+
+    func riichiPlayers(currentPlayers: [Player]) -> [String] {
+        playersAtResult.prefix(activeCount).filter(\.riichi).map { label($0, currentPlayers: currentPlayers) }
+    }
+
+    func changes(currentPlayers: [Player]) -> [String] {
+        (0..<activeCount).compactMap { index in
+            guard plan.scoreChangesByIndex[index] else { return nil }
+            let change = plan.winningPointsByIndex[index] - plan.losingPointsByIndex[index]
+            guard change != 0 else { return nil }
+            return "\(label(playersAtResult[index], currentPlayers: currentPlayers)): \(change > 0 ? "+" : "−")\(pointsText(abs(change)))"
+        }
+    }
+
+    func playersBeforeRound(currentPlayers: [Player]) -> [Player] {
+        playersBeforeRound.map { player in
+            var restored = player
+            restored.name = currentPlayers.first(where: { $0.id == player.id })?.name ?? player.name
+            return restored
+        }
+    }
+}
+
 struct ScoreApplicationPlan {
     let players: [Player]
     let winningPointsByIndex: [Int]

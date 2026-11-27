@@ -1,0 +1,7 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "swiftc": true,
+        "/tmp/mahjong-scoring-regression": true,
+        "xcodebuild": true
+    }
+}
