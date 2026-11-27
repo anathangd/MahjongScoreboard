@@ -13,6 +13,8 @@ import SwiftUI
 /// only when a recording was successfully saved.
 struct RecordRiichiSoundOverlay: View {
     @StateObject private var recorder = RiichiSoundRecorder()
+    @State private var soundName = ""
+    @State private var showNamePrompt = false
     let onDismiss: () -> Void
     var onSaved: () -> Void = {}
 
@@ -40,6 +42,18 @@ struct RecordRiichiSoundOverlay: View {
                     deniedContent
                 }
             }
+        }
+        .alert("Name your sound", isPresented: $showNamePrompt) {
+            TextField("Sound name", text: $soundName)
+            Button("save") {
+                recorder.saveRecording(named: soundName) { success in
+                    guard success else { return }
+                    onDismiss()
+                    onSaved()
+                }
+            }
+            .disabled(soundName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            Button("cancel", role: .cancel) {}
         }
         .onDisappear {
             recorder.discardRecording()
@@ -167,12 +181,8 @@ struct RecordRiichiSoundOverlay: View {
             Spacer()
 
             Button("save") {
-                recorder.saveRecording { success in
-                    onDismiss()
-                    if success {
-                        onSaved()
-                    }
-                }
+                soundName = ""
+                showNamePrompt = true
             }
             .font(.system(size: 30))
             .padding(.bottom, 6)

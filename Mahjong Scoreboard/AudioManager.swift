@@ -15,10 +15,14 @@ class AudioManager: ObservableObject {
     private let riichiSoundNames = ["riichi1", "riichi2", "riichi3Patrick", "riichi4Patrick"]
 
     private func randomRiichiSoundURL() -> URL? {
-        // Custom sounds imported or recorded by the user join the random pool.
-        if let randomSound = RiichiSoundStore.shared.sounds.randomElement() {
+        let store = RiichiSoundStore.shared
+        let availableSounds = store.sounds.filter { store.isEnabled($0) }
+        if let randomSound = availableSounds.randomElement() {
             return randomSound.url
         }
+
+        // Do not bypass the opt-outs when every known sound is disabled.
+        guard store.sounds.isEmpty else { return nil }
 
         let matchingURLs = supportedAudioExtensions.flatMap { fileExtension in
             Bundle.main.urls(forResourcesWithExtension: fileExtension, subdirectory: nil) ?? []

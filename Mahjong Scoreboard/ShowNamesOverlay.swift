@@ -3,9 +3,10 @@ import SwiftUI
 struct ShowNamesOverlay: View {
     @Binding var playerList: [Player]
     @Binding var showNames: Bool
-    @Binding var editNames: Bool
-    @Binding var enterNames: Bool
     let threePlayerMode: Bool
+
+    @State private var editingPlayerIndex: Int?
+    @State private var nameDraft = ""
 
     var body: some View {
         ZStack {
@@ -106,9 +107,7 @@ struct ShowNamesOverlay: View {
                     .padding(.init(top: 0, leading: 0, bottom: 70, trailing: 0))
                     .rotationEffect(.degrees(180))
                     .onLongPressGesture {
-                        editNames = true
-                        showNames = false
-                        enterNames = true
+                        startRenamingPlayer(at: 2)
                     }
                 Spacer()
                 Text(playerList[0].name)
@@ -116,6 +115,9 @@ struct ShowNamesOverlay: View {
                     .truncationMode(.tail)
                     .frame(width: 400, height: 30)
                     .padding(.init(top: 0, leading: 0, bottom: 50, trailing: 0))
+                    .onLongPressGesture {
+                        startRenamingPlayer(at: 0)
+                    }
             }
             .font(.system(size: 60))
             .foregroundColor(.white)
@@ -128,9 +130,7 @@ struct ShowNamesOverlay: View {
                     .padding(.init(top: 230, leading: 0, bottom: 0, trailing: 0))
                     .rotationEffect(.degrees(90))
                     .onLongPressGesture {
-                        editNames = true
-                        showNames = false
-                        enterNames = true
+                        startRenamingPlayer(at: 3)
                     }
                     .opacity(threePlayerMode ? 0 : 1)
                 Spacer()
@@ -148,9 +148,7 @@ struct ShowNamesOverlay: View {
                     .padding(.init(top: 230, leading: 0, bottom: 0, trailing: 0))
                     .rotationEffect(.degrees(-90))
                     .onLongPressGesture {
-                        editNames = true
-                        showNames = false
-                        enterNames = true
+                        startRenamingPlayer(at: 1)
                     }
             }
             .font(.system(size: 60))
@@ -158,5 +156,28 @@ struct ShowNamesOverlay: View {
             .padding(.horizontal, 10)
         }
         .ignoresSafeArea()
+        .alert(
+            "Change player name",
+            isPresented: Binding(
+                get: { editingPlayerIndex != nil },
+                set: { if !$0 { editingPlayerIndex = nil } }
+            )
+        ) {
+            TextField("Name", text: $nameDraft)
+            Button("save") {
+                if let editingPlayerIndex {
+                    playerList[editingPlayerIndex].name = nameDraft
+                }
+                editingPlayerIndex = nil
+            }
+            Button("cancel", role: .cancel) {
+                editingPlayerIndex = nil
+            }
+        }
+    }
+
+    private func startRenamingPlayer(at index: Int) {
+        nameDraft = playerList[index].name
+        editingPlayerIndex = index
     }
 }

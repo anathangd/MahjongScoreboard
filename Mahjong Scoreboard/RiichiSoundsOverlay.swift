@@ -178,7 +178,9 @@ struct RiichiSoundsOverlay: View {
     }
 
     private func soundRow(_ sound: RiichiSound) -> some View {
-        VStack(spacing: 0) {
+        let isEnabled = store.isEnabled(sound)
+
+        return VStack(spacing: 0) {
             HStack(spacing: 18) {
                 Button {
                     togglePreview(for: sound.url)
@@ -194,7 +196,16 @@ struct RiichiSoundsOverlay: View {
 
                 Spacer()
 
-                if !sound.isBundled {
+                if sound.isBundled {
+                    Button {
+                        store.setEnabled(!isEnabled, for: sound)
+                    } label: {
+                        Image(systemName: isEnabled ? "checkmark.square.fill" : "square")
+                            .font(.system(size: 24))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(isEnabled ? "Disable \(sound.displayName)" : "Enable \(sound.displayName)")
+                } else {
                     Button {
                         startRename(of: sound)
                     } label: {
@@ -210,7 +221,7 @@ struct RiichiSoundsOverlay: View {
                     }
                 }
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(sound.isBundled && !isEnabled ? .white.opacity(0.4) : .white)
             .padding(.horizontal, 30)
             .padding(.vertical, 12)
 

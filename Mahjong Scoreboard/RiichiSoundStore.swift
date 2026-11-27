@@ -27,6 +27,7 @@ class RiichiSoundStore: ObservableObject {
 
     /// Every sound in the random riichi pool: bundled first, then custom ones.
     @Published private(set) var sounds: [RiichiSound] = []
+    @Published private(set) var disabledBundledSoundNames: Set<String> = []
 
     /// Just the sounds the user imported or recorded.
     var customSounds: [RiichiSound] {
@@ -35,6 +36,7 @@ class RiichiSoundStore: ObservableObject {
 
     static let supportedExtensions = ["m4a", "mp3", "wav", "aif", "aiff", "caf"]
     private static let bundledSoundNames = ["riichi1", "riichi2", "riichi3Patrick", "riichi4Patrick"]
+    private static let disabledBundledSoundNamesKey = "disabledBundledRiichiSoundNames"
 
     // Limits for imported sounds: these are short riichi calls, so huge files,
     // long clips, and unlimited piles of sounds don't make sense.
@@ -43,7 +45,27 @@ class RiichiSoundStore: ObservableObject {
     static let maxCustomSounds = 50
 
     private init() {
+        disabledBundledSoundNames = Set(
+            UserDefaults.standard.stringArray(forKey: Self.disabledBundledSoundNamesKey) ?? []
+        )
         refresh()
+    }
+
+    func isEnabled(_ sound: RiichiSound) -> Bool {
+        !sound.isBundled || !disabledBundledSoundNames.contains(sound.name)
+    }
+
+    func setEnabled(_ enabled: Bool, for sound: RiichiSound) {
+        guard sound.isBundled else { return }
+        if enabled {
+            disabledBundledSoundNames.remove(sound.name)
+        } else {
+            disabledBundledSoundNames.insert(sound.name)
+        }
+        UserDefaults.standard.set(
+            disabledBundledSoundNames.sorted(),
+            forKey: Self.disabledBundledSoundNamesKey
+        )
     }
 
     /// Directory where custom riichi sounds are stored.
@@ -409,7 +431,7 @@ class RiichiSoundRecorder: NSObject, ObservableObject, AVAudioPlayerDelegate {
     // MARK: - Saving
 
     /// Exports the trimmed selection into the sounds directory, applying the volume boost.
-    func saveRecording(completion: @escaping (Bool) -> Void) {
+    func saveRecording(named name: String, completion: @escaping (Bool) -> Void) {
         guard let recordingURL else {
             completion(false)
             return
@@ -423,7 +445,15 @@ class RiichiSoundRecorder: NSObject, ObservableObject, AVAudioPlayerDelegate {
             return
         }
 
-        let destination = RiichiSoundStore.shared.uniqueDestinationURL(for: "recorded riichi.m4a")
+        let safeName = name
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "/", with: "-")
+            .replacingOccurrences(of: ":", with: "-")
+        guard !safeName.isEmpty else {
+            completion(false)
+            return
+        }
+        let destination = RiichiSoundStore.shared.uniqueDestinationURL(for: "\(safeName).m4a")
         let trimStart = self.trimStart
         let trimEnd = self.trimEnd
         let gain = self.gain

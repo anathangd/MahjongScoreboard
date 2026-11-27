@@ -55,6 +55,8 @@ struct ContentView: View {
     @State var enterNames = true    //needs to be true!!
     @State var showNames = false    //for displaying the show names screen
     @State var displayResultsScreen = false //for displaying results screen!
+    @State private var editingResultPlayerID: UUID?
+    @State private var resultNameDraft = ""
     
     @State var newArr: [Player] = [
         Player(name: "player1", score: 25000, wind: "東", winner: false, loser: false, tenpai: false, riichi: false),
@@ -607,8 +609,6 @@ struct ContentView: View {
                 ShowNamesOverlay(
                     playerList: $playerList,
                     showNames: $showNames,
-                    editNames: $editNames,
-                    enterNames: $enterNames,
                     threePlayerMode: threePlayerMode
                 )
             }
@@ -799,29 +799,63 @@ struct ContentView: View {
                 Rectangle()
                     .foregroundColor(.black)
                     .opacity(0.7)
-
-                VStack {
-                    Text(newArr[0].name + ": " + String(newArr[0].score))
-                        .font(.system(size: 50))
-                    Text(newArr[1].name + ": " + String(newArr[1].score))
-                        .font(.system(size: 48))
-                    Text(newArr[2].name + ": " + String(newArr[2].score))
-                        .font(.system(size: 46))
-                    Text(newArr[3].name + ": " + String(newArr[3].score))
-                        .font(.system(size: 44))
-                        .opacity(threePlayerMode ? 0: 1)
-
-                }
-                .font(.system(size: 30))
-                .foregroundColor(.white)
-                .padding(40)
-                Color.clear
-                    .contentShape(Rectangle())
                     .onTapGesture {
+                        finishResultsNameEdit()
                         displayResultsScreen = false
                     }
-            }.ignoresSafeArea()
+
+                VStack(spacing: 0) {
+                    ForEach(0..<newArr.count, id: \.self) { index in
+                        let player = newArr[index]
+                        Text("\(player.name): \(player.score)")
+                            .frame(maxWidth: .infinity)
+                            .contentShape(Rectangle())
+                            .onLongPressGesture {
+                                startResultsNameEdit(for: player)
+                            }
+                            .font(.system(size: 50 - CGFloat(index * 2)))
+                            .opacity(index == 3 && threePlayerMode ? 0 : 1)
+                    }
+                }
+                .foregroundColor(.white)
+                .padding(40)
+            }
+            .ignoresSafeArea()
+            .alert(
+                "Change player name",
+                isPresented: Binding(
+                    get: { editingResultPlayerID != nil },
+                    set: { if !$0 { editingResultPlayerID = nil } }
+                )
+            ) {
+                TextField("Name", text: $resultNameDraft)
+                Button("save") {
+                    finishResultsNameEdit()
+                }
+                Button("cancel", role: .cancel) {
+                    editingResultPlayerID = nil
+                }
+            }
         }
+    }
+
+    private func startResultsNameEdit(for player: Player) {
+        resultNameDraft = player.name
+        editingResultPlayerID = player.id
+    }
+
+    private func finishResultsNameEdit() {
+        guard let playerID = editingResultPlayerID else { return }
+        let trimmedName = resultNameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedName.isEmpty {
+            if let resultIndex = newArr.firstIndex(where: { $0.id == playerID }) {
+                newArr[resultIndex].name = trimmedName
+            }
+            if let playerIndex = playerList.firstIndex(where: { $0.id == playerID }) {
+                playerList[playerIndex].name = trimmedName
+            }
+        }
+        editingResultPlayerID = nil
     }
 
     @ViewBuilder
